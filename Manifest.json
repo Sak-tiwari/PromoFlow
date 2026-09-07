@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "Promo-Flow: Auto Coupon Optimizer",
+  "version": "1.0.0",
+  "description": "Automatically finds, tests, and applies optimal coupon codes on e-commerce checkouts using a Trie-validated, Max-Heap-ranked, DP-optimized engine.",
+  "permissions": ["scripting", "activeTab", "storage", "tabs", "alarms", "notifications"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/dsa_engine.js", "content.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Promo-Flow"
+  },
+  "icons": {
+    "16":  "popup/icon.png",
+    "48":  "popup/icon.png",
+    "128": "popup/icon.png"
+  },
+  "web_accessible_resources": [
+    { "resources": ["popup/icon.png"], "matches": ["<all_urls>"] }
+  ]
+}
