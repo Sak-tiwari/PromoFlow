@@ -1,0 +1,837 @@
+openapi: 3.1.0
+info:
+  title: Promo Flow Redemption API
+  version: 0.1.0-draft
+  summary: Quote, redeem and reverse promotions at checkout (India, INR, GST-aware).
+  description: |
+    **Draft for M0 review.** The final spec is generated from the route schemas in code and checked in CI.
+
+    Conventions:
+    - All money is an **integer in paise** (minor units) plus a currency code. Never floats.
+    - Percentages are basis points (1800 = 18.00%).
+    - Every response carries `X-Request-Id`. Mutating calls require `Idempotency-Key`.
+    - Errors use one format (`Error`). Business rejections use reason codes, not prose.
+    - Keys: a **secret key** may call everything; a **publishable key** may call `POST /v1/quotes` only.
+    - Payment objects must never contain a card number, BIN, expiry or CVV (RBI rules). Such payloads are rejected.
+servers:
+  - url: http://localhost:3000
+    description: Local development
+tags:
+  - name: Quotes
+    description: Dry run. Changes nothing.
+  - name: Redemptions
+    description: Commit a promotion at payment, and reverse it.
+  - name: Health
+    description: Liveness and readiness probes for orchestration. No authentication.
+security:
+  - secretKey: []
+paths:
+  /v1/quotes:
+    post:
+      tags: [Quotes]
+      operationId: createQuote
+      summary: Price a cart with the best allowed promotions
+      description: |
+        Evaluates a cart. If `code` is given it is tried first. If not, and `discover_codes` is true, the engine tries
+        automatic promotions and discoverable coupons. At most one coupon-slot promotion and one payment-slot promotion
+        are applied. Returns what applied, what did not (with reason codes and near-miss nudges), totals, a GST
+        breakup, and what each payment method would save.
+      security:
+        - secretKey: []
+        - publishableKey: []
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteRequest'
+      responses:
+        '200':
+          description: Quote computed.
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quote'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /v1/redemptions:
+    post:
+      tags: [Redemptions]
+      operationId: createRedemption
+      summary: Redeem at payment (single call)
+      description: |
+        Re-evaluates the cart and commits atomically: limits and budget are taken with conditional updates in one
+        transaction. If a limit was consumed in the meantime and the amount would change, the call fails with
+        `409 PRICE_CHANGED` so the checkout can re-display. A repeat with the same `Idempotency-Key` and body returns
+        the original result and never counts twice.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RedemptionRequest'
+      responses:
+        '201':
+          description: Redeemed.
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Redemption'
+        '200':
+          description: Idempotent replay of an earlier successful request.
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Redemption'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /v1/redemptions/{redemption_id}:
+    get:
+      tags: [Redemptions]
+      operationId: getRedemption
+      summary: Fetch a redemption
+      parameters:
+        - $ref: '#/components/parameters/RedemptionId'
+      responses:
+        '200':
+          description: The redemption.
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Redemption'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /v1/redemptions/{redemption_id}/reversals:
+    post:
+      tags: [Redemptions]
+      operationId: createReversal
+      summary: Reverse a redemption, fully or partly
+      description: |
+        Call when payment fails, an order is cancelled, or goods are refunded. Without `lines` the whole redemption is
+        reversed. With `lines`, the reversal is proportional using the stored line allocations. Uses and budget are
+        restored in the same transaction. The response includes credit-note data (taxable value and tax reversed per
+        line); the merchant issues the actual credit note.
+      parameters:
+        - $ref: '#/components/parameters/RedemptionId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReversalRequest'
+      responses:
+        '201':
+          description: Reversed.
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reversal'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /health/live:
+    get:
+      tags: [Health]
+      operationId: getLiveness
+      summary: Liveness probe
+      security: []
+      responses:
+        '200':
+          description: The process is running.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    const: ok
+  /health/ready:
+    get:
+      tags: [Health]
+      operationId: getReadiness
+      summary: Readiness probe (database reachable, migrations current)
+      security: []
+      responses:
+        '200':
+          description: Ready to serve traffic.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    const: ready
+        '503':
+          description: Not ready.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  securitySchemes:
+    secretKey:
+      type: http
+      scheme: bearer
+      description: Server-to-server key (`pf_sk_live_...` or `pf_sk_test_...`). Full access. Never ship it to a browser.
+    publishableKey:
+      type: http
+      scheme: bearer
+      description: Browser-safe key (`pf_pk_live_...` or `pf_pk_test_...`). May call `POST /v1/quotes` only.
+  headers:
+    XRequestId:
+      description: Unique id for this request. Quote it when contacting support.
+      schema:
+        type: string
+    RetryAfter:
+      description: Seconds to wait before retrying.
+      schema:
+        type: integer
+        minimum: 0
+  parameters:
+    AcceptLanguage:
+      name: Accept-Language
+      in: header
+      required: false
+      description: Preferred locale for promotion labels. One of en, hi, mr, ta, te. Falls back to en.
+      schema:
+        type: string
+        examples: [hi]
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Unique key (max 128 chars) per logical operation. Reuse it only to retry the same request.
+      schema:
+        type: string
+        minLength: 8
+        maxLength: 128
+    RedemptionId:
+      name: redemption_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    BadRequest:
+      description: Malformed request or schema validation failure.
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Missing, invalid or revoked API key.
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: The key does not have permission for this operation (for example a publishable key calling redeem).
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found for this store.
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: |
+        Conflict. Error codes: `IDEMPOTENCY_KEY_REUSED` (same key, different body), `PRICE_CHANGED` (amount differs
+        from `expected_payable`; the body carries the new quote), `ORDER_ALREADY_REDEEMED`, `ALREADY_REVERSED`.
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unprocessable:
+      description: The request is well-formed but the promotion cannot be applied. `details.reason_codes` lists why.
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    RateLimited:
+      description: Too many requests. Validate/redeem endpoints have stricter limits to stop code guessing.
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, request_id]
+          properties:
+            code:
+              type: string
+              description: Stable machine-readable code, for example `VALIDATION_FAILED`, `PRICE_CHANGED`, `RATE_LIMITED`.
+            message:
+              type: string
+              description: English message for developers. Shoppers should be shown localized text built from codes.
+            request_id:
+              type: string
+            details:
+              type: object
+              additionalProperties: true
+    CurrencyCode:
+      type: string
+      description: ISO 4217 code. Only INR for now; the field exists so more can be added.
+      enum: [INR]
+    Paise:
+      type: integer
+      format: int64
+      minimum: 0
+      description: Integer amount in paise (1 INR = 100 paise).
+    BasisPoints:
+      type: integer
+      minimum: 0
+      maximum: 10000
+      description: Percentage times 100 (1800 = 18.00%).
+    ReasonCode:
+      type: string
+      description: Extensible enum. Clients must tolerate unknown values.
+      enum:
+        - CODE_NOT_FOUND
+        - CODE_INACTIVE
+        - PROMOTION_NOT_STARTED
+        - PROMOTION_ENDED
+        - USAGE_LIMIT_REACHED
+        - CUSTOMER_LIMIT_REACHED
+        - BUDGET_EXHAUSTED
+        - MIN_SUBTOTAL_NOT_MET
+        - NO_ELIGIBLE_ITEMS
+        - CUSTOMER_NOT_ELIGIBLE
+        - CHANNEL_NOT_ELIGIBLE
+        - CURRENCY_NOT_SUPPORTED
+        - NOT_COMBINABLE
+        - PAYMENT_METHOD_NOT_ELIGIBLE
+        - SLOT_ALREADY_FILLED
+        - RESERVATION_EXPIRED
+        - RATE_LIMITED
+    CartLine:
+      type: object
+      required: [id, quantity, unit_price, gst_rate_bp]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          maxLength: 64
+          description: Merchant's line id, unique within the cart.
+        product_id:
+          type: string
+          maxLength: 128
+        sku:
+          type: string
+          maxLength: 128
+        category_ids:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+        collection_ids:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 10000
+        unit_price:
+          $ref: '#/components/schemas/Paise'
+        gst_rate_bp:
+          $ref: '#/components/schemas/BasisPoints'
+        hsn_sac:
+          type: string
+          maxLength: 8
+        already_discounted:
+          type: boolean
+          default: false
+          description: Set true if the unit price is already a sale price (used by "exclude already-discounted items").
+    Shipping:
+      type: object
+      required: [amount]
+      additionalProperties: false
+      properties:
+        amount:
+          $ref: '#/components/schemas/Paise'
+        gst_rate_bp:
+          $ref: '#/components/schemas/BasisPoints'
+    Cart:
+      type: object
+      required: [currency, lines]
+      additionalProperties: false
+      properties:
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        prices_include_tax:
+          type: boolean
+          default: true
+          description: True when unit prices already include GST (the normal Indian retail case).
+        supplier_state_code:
+          type: string
+          pattern: '^[0-9]{2}$'
+          description: GST state code of the supplier. Same as place of supply means CGST+SGST; otherwise IGST.
+        place_of_supply_state_code:
+          type: string
+          pattern: '^[0-9]{2}$'
+        lines:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/CartLine'
+        shipping:
+          $ref: '#/components/schemas/Shipping'
+        channel:
+          type: string
+          enum: [web, app, pos, marketplace]
+          default: web
+        metadata:
+          type: object
+          maxProperties: 20
+          additionalProperties:
+            type: string
+            maxLength: 256
+    Customer:
+      type: object
+      required: [external_id]
+      additionalProperties: false
+      properties:
+        external_id:
+          type: string
+          maxLength: 128
+          description: Merchant's customer id. Promo Flow looks up order history in its own ledger.
+        email:
+          type: string
+          format: email
+          description: Optional. Used only to derive a keyed hash for per-customer limits; the address is not stored.
+        order_count:
+          type: integer
+          minimum: 0
+          description: Optional override of the ledger-derived order count.
+    Payment:
+      type: object
+      additionalProperties: false
+      description: |
+        What the shopper intends to pay with. **Never** send card numbers, BINs, expiry or CVV; such requests are rejected.
+      properties:
+        method:
+          type: string
+          enum: [card, upi, netbanking, wallet, emi, cod]
+        issuer:
+          type: string
+          maxLength: 64
+          description: Issuing bank name, for example "HDFC Bank".
+        network:
+          type: string
+          enum: [visa, mastercard, rupay, amex, diners, other]
+        card_type:
+          type: string
+          enum: [credit, debit]
+        last4:
+          type: string
+          pattern: '^[0-9]{4}$'
+    QuoteRequest:
+      type: object
+      required: [cart]
+      additionalProperties: false
+      properties:
+        cart:
+          $ref: '#/components/schemas/Cart'
+        customer:
+          $ref: '#/components/schemas/Customer'
+        code:
+          type: string
+          maxLength: 64
+          description: Coupon code entered by the shopper. Trimmed and case-insensitive.
+        discover_codes:
+          type: boolean
+          default: true
+          description: When no code is given, try automatic promotions and discoverable coupons and apply the best.
+        payment:
+          $ref: '#/components/schemas/Payment'
+    RedemptionRequest:
+      type: object
+      required: [order_id, cart, customer]
+      additionalProperties: false
+      properties:
+        order_id:
+          type: string
+          maxLength: 128
+          description: Merchant's order id. One order can be redeemed only once per mode.
+        cart:
+          $ref: '#/components/schemas/Cart'
+        customer:
+          $ref: '#/components/schemas/Customer'
+        code:
+          type: string
+          maxLength: 64
+        discover_codes:
+          type: boolean
+          default: true
+        payment:
+          $ref: '#/components/schemas/Payment'
+        expected_payable:
+          $ref: '#/components/schemas/Paise'
+    Allocation:
+      type: object
+      required: [target, amount]
+      properties:
+        target:
+          type: string
+          enum: [line, shipping]
+        line_id:
+          type: string
+        amount:
+          $ref: '#/components/schemas/Paise'
+    AppliedPromotion:
+      type: object
+      required: [promotion_id, promotion_version, slot, benefit_type, funded_by, tax_treatment, amount, allocations]
+      properties:
+        promotion_id:
+          type: string
+          format: uuid
+        promotion_version:
+          type: integer
+        slot:
+          type: string
+          enum: [coupon, payment]
+        code:
+          type: [string, 'null']
+        label:
+          type: string
+          description: Shopper-facing label in the requested locale (falls back to English).
+        benefit_type:
+          type: string
+          enum:
+            - percentage_off_order
+            - fixed_off_order
+            - off_products
+            - free_shipping
+            - buy_x_get_y
+            - tiered_spend
+            - bundle_price
+            - free_gift
+            - fixed_item_price
+        funded_by:
+          type: string
+          enum: [merchant, third_party]
+        tax_treatment:
+          type: string
+          enum: [reduces_taxable_value, keeps_taxable_value]
+        amount:
+          $ref: '#/components/schemas/Paise'
+        allocations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Allocation'
+        gift:
+          type: object
+          description: Present for free_gift. Shown as its own labelled line; never increases the payable.
+          properties:
+            product_id:
+              type: string
+            quantity:
+              type: integer
+    Nudge:
+      type: object
+      required: [type, message_key]
+      properties:
+        type:
+          type: string
+          enum: [add_more_spend, add_more_quantity, use_payment_method, other]
+        message_key:
+          type: string
+          description: Key the client translates, for example `nudge.add_more_spend`.
+        params:
+          type: object
+          additionalProperties: true
+        missing_amount:
+          $ref: '#/components/schemas/Paise'
+    RejectedPromotion:
+      type: object
+      required: [reason_codes]
+      properties:
+        promotion_id:
+          type: string
+          format: uuid
+        code:
+          type: [string, 'null']
+        reason_codes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReasonCode'
+        nudges:
+          type: array
+          items:
+            $ref: '#/components/schemas/Nudge'
+    Totals:
+      type: object
+      required: [currency, items_total, discount_total, shipping_total, shipping_discount, payable, third_party_funded]
+      properties:
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        items_total:
+          $ref: '#/components/schemas/Paise'
+        discount_total:
+          $ref: '#/components/schemas/Paise'
+        shipping_total:
+          $ref: '#/components/schemas/Paise'
+        shipping_discount:
+          $ref: '#/components/schemas/Paise'
+        payable:
+          $ref: '#/components/schemas/Paise'
+          description: What the shopper pays.
+        third_party_funded:
+          $ref: '#/components/schemas/Paise'
+          description: Part of the discount a bank or other third party reimburses to the merchant.
+    LineTax:
+      type: object
+      required: [target, gst_rate_bp, taxable_value, cgst, sgst, igst]
+      properties:
+        target:
+          type: string
+          enum: [line, shipping]
+        line_id:
+          type: string
+        gst_rate_bp:
+          $ref: '#/components/schemas/BasisPoints'
+        taxable_value:
+          $ref: '#/components/schemas/Paise'
+        cgst:
+          $ref: '#/components/schemas/Paise'
+        sgst:
+          $ref: '#/components/schemas/Paise'
+        igst:
+          $ref: '#/components/schemas/Paise'
+    TaxSummary:
+      type: object
+      required: [prices_include_tax, lines, total_taxable_value, total_tax]
+      properties:
+        prices_include_tax:
+          type: boolean
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineTax'
+        total_taxable_value:
+          $ref: '#/components/schemas/Paise'
+        total_tax:
+          $ref: '#/components/schemas/Paise'
+    PricingResult:
+      type: object
+      required: [applied, totals, tax]
+      properties:
+        applied:
+          type: array
+          maxItems: 2
+          items:
+            $ref: '#/components/schemas/AppliedPromotion'
+        totals:
+          $ref: '#/components/schemas/Totals'
+        tax:
+          $ref: '#/components/schemas/TaxSummary'
+    PaymentOfferOption:
+      type: object
+      required: [promotion_id, extra_discount, payable_if_selected]
+      properties:
+        promotion_id:
+          type: string
+          format: uuid
+        label:
+          type: string
+        match:
+          $ref: '#/components/schemas/Payment'
+        extra_discount:
+          $ref: '#/components/schemas/Paise'
+        payable_if_selected:
+          $ref: '#/components/schemas/Paise'
+    Quote:
+      allOf:
+        - $ref: '#/components/schemas/PricingResult'
+        - type: object
+          required: [rejected, payment_offer_options, rules_version, evaluated_at]
+          properties:
+            rejected:
+              type: array
+              items:
+                $ref: '#/components/schemas/RejectedPromotion'
+            payment_offer_options:
+              type: array
+              items:
+                $ref: '#/components/schemas/PaymentOfferOption'
+            rules_version:
+              type: integer
+              format: int64
+            evaluated_at:
+              type: string
+              format: date-time
+    Redemption:
+      allOf:
+        - $ref: '#/components/schemas/PricingResult'
+        - type: object
+          required: [id, order_id, status, mode, created_at]
+          properties:
+            id:
+              type: string
+              format: uuid
+            order_id:
+              type: string
+            status:
+              type: string
+              enum: [committed, partially_reversed, reversed]
+            mode:
+              type: string
+              enum: [live, test]
+            created_at:
+              type: string
+              format: date-time
+    ReversalRequest:
+      type: object
+      required: [reason]
+      additionalProperties: false
+      properties:
+        reason:
+          type: string
+          enum: [payment_failed, cancelled, refunded, support_void]
+        note:
+          type: string
+          maxLength: 500
+        lines:
+          type: array
+          description: Omit for a full reversal.
+          items:
+            type: object
+            required: [line_id]
+            additionalProperties: false
+            properties:
+              line_id:
+                type: string
+              quantity:
+                type: integer
+                minimum: 1
+              amount:
+                $ref: '#/components/schemas/Paise'
+    CreditNoteLine:
+      type: object
+      required: [line_id, taxable_value_reversed, cgst, sgst, igst]
+      properties:
+        line_id:
+          type: string
+        taxable_value_reversed:
+          $ref: '#/components/schemas/Paise'
+        cgst:
+          $ref: '#/components/schemas/Paise'
+        sgst:
+          $ref: '#/components/schemas/Paise'
+        igst:
+          $ref: '#/components/schemas/Paise'
+    Reversal:
+      type: object
+      required: [id, redemption_id, reason, discount_reversed, restored_uses, credit_note_lines, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        redemption_id:
+          type: string
+          format: uuid
+        reason:
+          type: string
+        discount_reversed:
+          $ref: '#/components/schemas/Paise'
+        restored_uses:
+          type: integer
+          minimum: 0
+        credit_note_lines:
+          type: array
+          description: Data for the merchant's credit note. Promo Flow does not issue invoices.
+          items:
+            $ref: '#/components/schemas/CreditNoteLine'
+        created_at:
+          type: string
+          format: date-time
