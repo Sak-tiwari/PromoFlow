@@ -1,0 +1,16 @@
+{
+  "stores": [
+    { "domain": "localhost", "name": "Demo Store (local test checkout)", "adapter": "generic" },
+    { "domain": "amazon.in", "name": "Amazon India", "adapter": "amazon" },
+    { "domain": "amazon.com", "name": "Amazon", "adapter": "amazon" },
+    { "domain": "flipkart.com", "name": "Flipkart", "adapter": "flipkart" }
+  ],
+  "coupons": [
+    { "domain": "localhost", "code": "SAVE10", "type": "percent", "value": 1000, "minSpend": 50000, "source": "demo", "stats": { "tries": 40, "successes": 36 } },
+    { "domain": "localhost", "code": "FLAT100", "type": "flat", "value": 10000, "minSpend": 99900, "source": "demo", "stats": { "tries": 30, "successes": 24 } },
+    { "domain": "localhost", "code": "WELCOME50", "type": "flat", "value": 5000, "minSpend": 0, "source": "demo", "stats": { "tries": 20, "successes": 15 } },
+    { "domain": "localhost", "code": "BIG500", "type": "flat", "value": 50000, "minSpend": 1000000, "source": "demo", "stats": { "tries": 20, "successes": 2 } },
+    { "domain": "localhost", "code": "OLD20", "type": "percent", "value": 2000, "source": "demo", "stats": { "tries": 25, "successes": 0 } },
+    { "domain": "localhost", "code": "NOPE", "type": "unknown", "value": 0, "source": "demo", "stats": { "tries": 10, "successes": 0 } }
+  ]
+}

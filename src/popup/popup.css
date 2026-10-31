@@ -1,0 +1,10 @@
+:root{color-scheme:light dark;--bg:#fff;--fg:#1b1f23;--mut:#57606a;--bd:#d0d7de;--ac:#0b6bcb}
+@media (prefers-color-scheme:dark){:root{--bg:#161b22;--fg:#e6edf3;--mut:#8b949e;--bd:#30363d;--ac:#58a6ff}}
+body{width:340px;margin:0;padding:14px;background:var(--bg);color:var(--fg);font:14px/1.45 system-ui,"Noto Sans","Noto Sans Devanagari","Noto Sans Tamil","Noto Sans Telugu",sans-serif}
+header{display:flex;justify-content:space-between;align-items:center}h1{font-size:17px;margin:0}
+.muted{color:var(--mut);font-size:12px;margin:4px 0 8px}
+button,select,input,textarea{font:inherit;color:inherit;background:transparent;border:1px solid var(--bd);border-radius:8px;padding:6px 8px}
+textarea,input[type=url]{width:100%;box-sizing:border-box}
+.primary{width:100%;background:var(--ac);color:#fff;border-color:var(--ac);padding:9px;font-weight:600;margin-top:6px}
+label{display:block;margin-top:10px;font-weight:600}.chk{font-weight:400;display:flex;gap:6px;align-items:center}
+#save{margin-top:10px}

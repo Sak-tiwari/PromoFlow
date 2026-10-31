@@ -6,9 +6,26 @@ A small Node.js/Express + MongoDB backend stores coupon candidates and anonymous
 
 College project. Zero-cost to run. Designed so more sites are added by configuration.
 
-## Status
+## Status (31 Oct 2026)
 
-Planning. No application code yet. Waiting for answers to the questions at the end of [docs/PLAN.md](docs/PLAN.md).
+Working core, built for a 4-day deadline.
+
+**Verified (automated, 45 tests + one real-Chromium run):** money/Indian grouping, Trie, MaxHeap/MinHeap, knapsack DP (checked against brute force), offer parser, the sequential apply engine, backend API, i18n key parity, TTL cache. The packaged extension was loaded in headless Chromium and run against the local demo store: it tried 6 codes, applied the best (SAVE10, saved ₹150.00 measured), and showed the HDFC offer as an estimate.
+
+**Not verified:** Amazon.in and Flipkart adapters (written from memory, no access to live checkouts from the build sandbox; marked experimental in the UI), `backend/repo/mongoRepo.js` (no MongoDB in the sandbox), Domino's/Zomato (optional, not researched).
+
+**Cut from the plan:** selector recorder, Kindred dataset ingestion, Web Store packaging/privacy policy, Hindi/Marathi/Tamil/Telugu human review (machine drafts).
+
+## Run it
+
+```
+npm install
+npm run build        # creates dist/
+npm run backend      # API on :3000 (in-memory data unless MONGODB_URI is set; add --seed to seed Mongo)
+npm run demo         # fake checkout on http://localhost:4000
+npm test
+```
+Chrome/Edge: chrome://extensions → Developer mode → Load unpacked → pick `dist/`. Open the demo checkout, click the Promo-Flow icon, press "Find best savings".
 
 ## Docs
 

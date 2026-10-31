@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo Store: Checkout</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 24px auto; padding: 0 16px; color: #222; }
+    table { width: 100%; border-collapse: collapse; }
+    td { padding: 6px 0; border-bottom: 1px solid #eee; }
+    td.amt { text-align: right; }
+    .total td { font-weight: 700; font-size: 1.1em; }
+    .msg { min-height: 1.4em; margin: 6px 0; }
+    .msg.error { color: #b00020; } .msg.ok { color: #0a7d2c; }
+    .toggle { color: #0b5fff; cursor: pointer; background: none; border: 0; padding: 0; }
+    .offers { background: #f6f8ff; padding: 8px 12px; margin-top: 16px; border-radius: 6px; }
+    #promo-box[hidden] { display: none; }
+  </style>
+</head>
+<body>
+  <h1>Demo Store checkout</h1>
+  <p>A fake checkout for testing Promo-Flow. Valid codes: SAVE10, FLAT100, BIG500, WELCOME50.</p>
+
+  <table id="cart">
+    <tr><td>Wireless headphones</td><td class="amt">₹1,999.00</td></tr>
+    <tr><td>USB-C cable</td><td class="amt">₹499.00</td></tr>
+    <tr><td>Phone case</td><td class="amt">₹799.00</td></tr>
+    <tr><td>Subtotal</td><td class="amt" id="subtotal">₹3,297.00</td></tr>
+    <tr id="discount-row" hidden><td>Coupon discount</td><td class="amt" id="discount">-₹0.00</td></tr>
+    <tr><td>Delivery</td><td class="amt" id="shipping">₹49.00</td></tr>
+    <tr class="total"><td>Total payable (incl. GST)</td><td class="amt" id="total">₹3,346.00</td></tr>
+  </table>
+
+  <p><button class="toggle" id="promo-toggle" type="button">Have a promo code?</button></p>
+  <div id="promo-box" hidden>
+    <form id="promo-form" onsubmit="return false">
+      <label for="promo-input">Promo code</label>
+      <input id="promo-input" name="coupon_code" placeholder="Enter coupon code" autocomplete="off">
+      <button id="promo-apply" type="button">Apply</button>
+    </form>
+    <div id="promo-msg" class="msg" role="status" aria-live="polite"></div>
+    <div id="applied" hidden>Applied: <b id="applied-code"></b> <a href="#" id="promo-remove">Remove</a></div>
+  </div>
+
+  <div class="offers" id="offers">
+    <b>Bank offers</b>
+    <p>10% instant discount up to ₹300 on HDFC Bank Credit Cards. Min order value ₹2,000</p>
+    <p>Flat ₹150 off on ICICI Bank debit cards on orders above ₹1,499</p>
+    <p>5% cashback up to ₹750 on Axis Bank cards</p>
+  </div>
+
+  <script>
+    // Prices in paise. Codes are evaluated on the subtotal (like many real stores).
+    const SUBTOTAL = 329700, SHIPPING = 4900;
+    const RULES = {
+      SAVE10:    { type: 'percent', bp: 1000, cap: 15000, min: 50000 },
+      FLAT100:   { type: 'flat', amount: 10000, min: 99900 },
+      BIG500:    { type: 'flat', amount: 50000, min: 1000000 },
+      WELCOME50: { type: 'flat', amount: 5000, min: 0 },
+      OLD20:     { type: 'expired' },
+    };
+    const fmt = (p) => {
+      const w = String(Math.trunc(Math.abs(p) / 100)), f = String(Math.abs(p) % 100).padStart(2, '0');
+      const g = w.length > 3 ? w.slice(0, -3).replace(/\B(?=(\d{2})+(?!\d))/g, ',') + ',' + w.slice(-3) : w;
+      return (p < 0 ? '-' : '') + '₹' + g + '.' + f;
+    };
+    let applied = null;
+    const $ = (id) => document.getElementById(id);
+    function render() {
+      const d = applied ? applied.discount : 0;
+      $('discount-row').hidden = !applied;
+      $('discount').textContent = '-' + fmt(d);
+      $('total').textContent = fmt(SUBTOTAL - d + SHIPPING);
+      $('applied').hidden = !applied;
+      if (applied) $('applied-code').textContent = applied.code;
+    }
+    function message(text, cls) { const m = $('promo-msg'); m.textContent = text; m.className = 'msg ' + (cls || ''); }
+    $('promo-toggle').onclick = () => { $('promo-box').hidden = false; };
+    $('promo-apply').onclick = () => {
+      const code = $('promo-input').value.trim().toUpperCase();
+      message('Checking…');
+      setTimeout(() => {            // async like a real store
+        const r = RULES[code];
+        if (!r) return message('Invalid coupon code', 'error');
+        if (r.type === 'expired') return message('This coupon has expired', 'error');
+        if (SUBTOTAL < r.min) return message('Minimum order value ₹' + (r.min / 100) + ' required for this coupon', 'error');
+        if (applied) return message('A coupon is already applied. Remove it first.', 'error');
+        let d = r.type === 'percent' ? Math.min(Math.floor(SUBTOTAL * r.bp / 10000), r.cap) : r.amount;
+        applied = { code, discount: d };
+        message('Coupon applied', 'ok');
+        render();
+      }, 120);
+    };
+    $('promo-remove').onclick = (e) => {
+      e.preventDefault();
+      setTimeout(() => { applied = null; $('promo-input').value = ''; message(''); render(); }, 80);
+    };
+    render();
+  </script>
+</body>
+</html>
