@@ -151,8 +151,19 @@ export function readOfferTexts(doc, limit = 8) {
 }
 
 export function looksLikeCaptcha(doc) {
-  if (doc.querySelector('iframe[src*="recaptcha"], iframe[src*="hcaptcha"], .g-recaptcha, #captcha, [id*="captcha" i]')) return true;
-  const t = (doc.body.innerText ?? doc.body.textContent ?? '').slice(0, 4000);
+  // Only VISIBLE challenge elements count: pages often keep hidden captcha containers around.
+  const sel = 'iframe[src*="recaptcha"], iframe[src*="hcaptcha"], .g-recaptcha, #captcha, [id*="captcha" i]';
+  if ([...doc.querySelectorAll(sel)].some((el) => isVisible(el))) return true;
+  let t = doc.body.innerText; // real browsers: visible text only
+  if (typeof t !== 'string') { // jsdom has no innerText: walk visible text nodes instead of counting hidden text
+    t = '';
+    const w = doc.createTreeWalker(doc.body, 0x4);
+    while (t.length < 4000 && w.nextNode()) {
+      const n = w.currentNode;
+      if (n.nodeValue.trim() && isVisible(n.parentElement)) t += ` ${n.nodeValue}`;
+    }
+  }
+  t = t.slice(0, 4000);
   return /are you a robot|verify (that )?you are human|unusual traffic|enter the characters you see/i.test(t);
 }
 

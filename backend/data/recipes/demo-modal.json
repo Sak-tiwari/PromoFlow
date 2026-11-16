@@ -1,0 +1,31 @@
+{
+  "id": "demo-modal",
+  "version": 1,
+  "hosts": ["localhost"],
+  "verified": false,
+  "pages": {
+    "bag": { "pathPrefixes": ["/modal.html"] },
+    "payment": { "pathPrefixes": ["/payment.html"] }
+  },
+  "coupon": {
+    "open": { "text": ["apply coupon"], "tag": ["button", "a"] },
+    "panel": { "css": "[role=dialog]" },
+    "input": { "css": "input[name=coupon]" },
+    "apply": { "text": ["check"], "tag": ["button"] },
+    "close": { "text": ["close"], "tag": ["button"] },
+    "panelClosesOnApply": true,
+    "listed": {
+      "item": { "css": "[data-coupon]" },
+      "code": { "attr": "data-coupon" },
+      "select": { "css": "input[type=radio]" },
+      "ineligibleText": ["not applicable"]
+    },
+    "message": { "css": "[role=alert]" },
+    "applied": { "text": ["coupon applied"] },
+    "remove": { "text": ["remove"], "tag": ["button", "a"] }
+  },
+  "total": { "css": "[data-total]" },
+  "offers": { "container": { "css": "#offers" } },
+  "loginWall": { "text": ["login to apply"] },
+  "limits": { "maxAttempts": 6, "delayMs": 1500, "jitterMs": 1000 }
+}

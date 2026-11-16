@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo Store: Bag (coupon popup)</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 24px auto; padding: 0 16px; color: #222; }
+    table { width: 100%; border-collapse: collapse; }
+    td { padding: 6px 0; border-bottom: 1px solid #eee; }
+    td.amt { text-align: right; }
+    .total td { font-weight: 700; font-size: 1.1em; }
+    button { font: inherit; padding: 6px 12px; cursor: pointer; }
+    [hidden] { display: none !important; }
+    #coupon-dialog { position: fixed; top: 10%; left: 50%; transform: translateX(-50%); width: min(480px, 92vw); background: #fff;
+      border: 1px solid #bbb; border-radius: 10px; padding: 16px; box-shadow: 0 10px 40px rgba(0,0,0,.25); z-index: 50; }
+    #coupon-list { list-style: none; padding: 0; margin: 8px 0; }
+    #coupon-list li { padding: 6px 0; border-bottom: 1px solid #eee; }
+    #coupon-list li.na { color: #777; }
+    [role=alert] { min-height: 1.4em; margin: 8px 0; }
+    [role=alert].error { color: #b00020; } [role=alert].ok { color: #0a7d2c; }
+    #applied-chip { margin: 10px 0; padding: 6px 10px; background: #e8f6ec; border-radius: 6px; display: inline-block; }
+    #notice, #captcha-box { margin: 10px 0; padding: 8px 12px; background: #fff4e5; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <h1>Your bag</h1>
+  <p>Demo of a site where coupons live in a popup. Test codes: SAVE10, FLAT100, WELCOME50, BIG500 (needs a larger bag), OLD20 (expired).
+     Query options: <code>?loggedout=1</code>, <code>?captcha=1</code>.</p>
+
+  <table id="cart">
+    <tr><td>Wireless headphones</td><td class="amt">₹1,999.00</td></tr>
+    <tr><td>USB-C cable</td><td class="amt">₹499.00</td></tr>
+    <tr><td>Phone case</td><td class="amt">₹799.00</td></tr>
+    <tr><td>Subtotal</td><td class="amt">₹3,297.00</td></tr>
+    <tr id="discount-row" hidden><td>Coupon discount</td><td class="amt" id="discount">-₹0.00</td></tr>
+    <tr><td>Delivery</td><td class="amt">₹49.00</td></tr>
+    <tr class="total"><td>Total payable (incl. GST)</td><td class="amt"><span data-total id="total">₹3,346.00</span></td></tr>
+  </table>
+
+  <p><button type="button" id="open-coupons">Apply Coupon</button></p>
+  <div id="notice" hidden>Login to apply coupons</div>
+  <div id="applied-chip" hidden><span>Coupon applied: <b id="chip-code"></b></span> <button type="button" id="chip-remove">Remove</button></div>
+  <div id="captcha-box" hidden>Verify that you are human to continue applying coupons.</div>
+  <p><a href="payment.html" id="to-payment">Proceed to payment</a></p>
+
+  <div id="coupon-dialog" role="dialog" aria-label="Apply coupon" hidden>
+    <h2>Coupons for your bag</h2>
+    <p id="login-msg" hidden>Login to apply coupons</p>
+    <ul id="coupon-list">
+      <li data-coupon="SAVE10"><label><input type="radio" name="pick" value="SAVE10"> <b>SAVE10</b> 10% off up to ₹150. Min order ₹500</label></li>
+      <li data-coupon="FLAT100"><label><input type="radio" name="pick" value="FLAT100"> <b>FLAT100</b> Flat ₹100 off. Min order ₹999</label></li>
+      <li data-coupon="BAG200"><label><input type="radio" name="pick" value="BAG200"> <b>BAG200</b> Flat ₹200 off. Min order ₹2,500</label></li>
+      <li data-coupon="BIG500" class="na"><label><input type="radio" name="pick" value="BIG500" disabled> <b>BIG500</b> Flat ₹500 off. Not applicable: add items worth ₹7,000 more</label></li>
+    </ul>
+    <form onsubmit="return false">
+      <label for="c-input">Have another code?</label>
+      <input id="c-input" name="coupon" placeholder="Enter coupon code" autocomplete="off">
+      <button type="button" id="check">Check</button>
+    </form>
+    <div role="alert" id="dlg-msg"></div>
+    <button type="button" id="close-dlg">Close</button>
+  </div>
+
+  <script>
+    // Prices in paise. Codes are evaluated on the subtotal.
+    const SUBTOTAL = 329700, SHIPPING = 4900;
+    const RULES = {
+      SAVE10:    { type: 'percent', bp: 1000, cap: 15000, min: 50000 },
+      FLAT100:   { type: 'flat', amount: 10000, min: 99900 },
+      BAG200:    { type: 'flat', amount: 20000, min: 250000 },
+      BIG500:    { type: 'flat', amount: 50000, min: 1000000 },
+      WELCOME50: { type: 'flat', amount: 5000, min: 0 },
+      OLD20:     { type: 'expired' },
+    };
+    const params = new URLSearchParams(location.search);
+    const LOGGED_OUT = params.has('loggedout'), CAPTCHA = params.has('captcha');
+    const $ = (id) => document.getElementById(id);
+    const fmt = (p) => {
+      const w = String(Math.trunc(Math.abs(p) / 100)), f = String(Math.abs(p) % 100).padStart(2, '0');
+      const g = w.length > 3 ? w.slice(0, -3).replace(/\B(?=(\d{2})+(?!\d))/g, ',') + ',' + w.slice(-3) : w;
+      return (p < 0 ? '-' : '') + '₹' + g + '.' + f;
+    };
+    let applied = null, applyCount = 0;
+    try { applied = JSON.parse(sessionStorage.getItem('demo:coupon') || 'null'); } catch (e) { applied = null; }
+
+    function render() {
+      const d = applied ? applied.discount : 0;
+      $('discount-row').hidden = !applied;
+      $('discount').textContent = '-' + fmt(d);
+      $('total').textContent = fmt(SUBTOTAL - d + SHIPPING);
+      $('applied-chip').hidden = !applied;
+      if (applied) $('chip-code').textContent = applied.code;
+      try { applied ? sessionStorage.setItem('demo:coupon', JSON.stringify(applied)) : sessionStorage.removeItem('demo:coupon'); } catch (e) { /* ignore */ }
+    }
+    function message(text, cls) { const m = $('dlg-msg'); m.textContent = text; m.className = cls || ''; }
+    const openDlg = () => { $('coupon-dialog').hidden = false; };
+    const closeDlg = () => { $('coupon-dialog').hidden = true; };
+
+    if (LOGGED_OUT) {
+      $('notice').hidden = false; $('login-msg').hidden = false; $('coupon-list').hidden = true; $('c-input').disabled = true;
+    }
+    $('open-coupons').onclick = openDlg;
+    $('close-dlg').onclick = closeDlg;
+    document.querySelectorAll('input[name=pick]').forEach((r) => { r.onchange = () => { $('c-input').value = r.value; }; });
+
+    $('check').onclick = () => {
+      if (LOGGED_OUT || !$('captcha-box').hidden) return;
+      const code = $('c-input').value.trim().toUpperCase();
+      applyCount++;
+      message('Checking…');
+      setTimeout(() => {              // async like a real store
+        const r = RULES[code];
+        let ok = false;
+        if (!r) message('Invalid coupon code', 'error');
+        else if (r.type === 'expired') message('This coupon has expired', 'error');
+        else if (SUBTOTAL < r.min) message('Minimum order value ₹' + (r.min / 100) + ' required for this coupon', 'error');
+        else if (applied) message('A coupon is already applied. Remove it first.', 'error');
+        else {
+          const d = r.type === 'percent' ? Math.min(Math.floor(SUBTOTAL * r.bp / 10000), r.cap) : r.amount;
+          applied = { code, discount: d };
+          message('Coupon applied', 'ok');
+          render();
+          ok = true;
+          setTimeout(closeDlg, 300);   // the popup closes itself after a successful apply
+        }
+        if (CAPTCHA && applyCount >= 3) $('captcha-box').hidden = false;
+        void ok;
+      }, 120);
+    };
+    $('chip-remove').onclick = () => {
+      setTimeout(() => { applied = null; $('c-input').value = ''; message(''); render(); }, 80);
+    };
+    render();
+  </script>
+</body>
+</html>

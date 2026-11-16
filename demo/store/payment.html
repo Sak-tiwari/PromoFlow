@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo Store: Payment</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 24px auto; padding: 0 16px; color: #222; }
+    table { width: 100%; border-collapse: collapse; } td { padding: 6px 0; border-bottom: 1px solid #eee; } td.amt { text-align: right; }
+    .total td { font-weight: 700; font-size: 1.1em; }
+    .offers { background: #f6f8ff; padding: 8px 12px; margin-top: 16px; border-radius: 6px; }
+    input { font: inherit; padding: 6px 8px; } [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <h1>Payment</h1>
+  <table>
+    <tr><td>Subtotal</td><td class="amt">₹3,297.00</td></tr>
+    <tr id="discount-row" hidden><td>Coupon discount</td><td class="amt" id="discount">-₹0.00</td></tr>
+    <tr><td>Delivery</td><td class="amt">₹49.00</td></tr>
+    <tr class="total"><td>Total payable (incl. GST)</td><td class="amt"><span data-total id="total">₹3,346.00</span></td></tr>
+  </table>
+
+  <div class="offers" id="offers">
+    <b>Bank offers</b>
+    <p>10% instant discount up to ₹300 on HDFC Bank Credit Cards. Min order value ₹2,000</p>
+    <p>Flat ₹150 off on ICICI Bank debit cards on orders above ₹1,499</p>
+    <p>5% cashback up to ₹750 on Axis Bank cards</p>
+  </div>
+
+  <h3>Pay by card</h3>
+  <p>The extension must never touch this field.</p>
+  <label for="card-number">Card number</label>
+  <input id="card-number" name="card_number" autocomplete="off" inputmode="numeric">
+
+  <script>
+    const SUBTOTAL = 329700, SHIPPING = 4900;
+    const fmt = (p) => {
+      const w = String(Math.trunc(Math.abs(p) / 100)), f = String(Math.abs(p) % 100).padStart(2, '0');
+      const g = w.length > 3 ? w.slice(0, -3).replace(/\B(?=(\d{2})+(?!\d))/g, ',') + ',' + w.slice(-3) : w;
+      return (p < 0 ? '-' : '') + '₹' + g + '.' + f;
+    };
+    let applied = null;
+    try { applied = JSON.parse(sessionStorage.getItem('demo:coupon') || 'null'); } catch (e) { applied = null; }
+    const d = applied ? applied.discount : 0;
+    document.getElementById('discount-row').hidden = !applied;
+    document.getElementById('discount').textContent = '-' + fmt(d);
+    document.getElementById('total').textContent = fmt(SUBTOTAL - d + SHIPPING);
+  </script>
+</body>
+</html>
