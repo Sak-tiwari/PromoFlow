@@ -31,6 +31,7 @@ Chrome/Edge: chrome://extensions → Developer mode → Load unpacked → pick `
 
 | Doc | What it covers |
 |---|---|
+| [docs/V2_BUILD_BRIEF.md](docs/V2_BUILD_BRIEF.md) | Next version: plan for Myntra, Ajio and Nykaa, and step-by-step build instructions for a coding model |
 | [docs/PLAN.md](docs/PLAN.md) | The current plan: product, your answers applied, platforms, data, compliance, roadmap |
 | [docs/archive-saas-engine/](docs/archive-saas-engine/) | An earlier merchant-side SaaS design (not the product). Kept for reference: some parts, such as the paise money rules and India compliance research, are reusable |
 
