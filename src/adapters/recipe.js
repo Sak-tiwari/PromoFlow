@@ -205,3 +205,13 @@ export function locateAll(root, loc) {
 export function locate(root, loc) {
   return locateAll(root, loc)[0] ?? null;
 }
+
+/** Which page of the recipe the given path belongs to: 'bag', 'payment' or null. */
+export function pageKind(recipe, pathname) {
+  const path = String(pathname || '');
+  for (const kind of ['bag', 'payment']) {
+    const prefixes = recipe?.pages?.[kind]?.pathPrefixes;
+    if (prefixes?.some((p) => path.startsWith(p))) return kind;
+  }
+  return null;
+}

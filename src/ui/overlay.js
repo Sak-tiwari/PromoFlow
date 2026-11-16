@@ -11,7 +11,7 @@ const CSS = `
 h1{font-size:15px;margin:0}
 button{font:inherit;border:1px solid #d0d7de;background:#f6f8fa;border-radius:8px;padding:4px 10px;cursor:pointer}
 .msg{margin:10px 0 0}.big{font-size:20px;font-weight:700;color:#1a7f37}
-.muted{color:#57606a;font-size:12px;margin-top:6px}.warn{color:#9a6700}
+.muted{color:#57606a;font-size:12px;margin-top:6px}.msg .muted{margin-top:2px}.warn{color:#9a6700}
 ul{margin:8px 0 0;padding:0;list-style:none;max-height:140px;overflow:auto}li{display:flex;justify-content:space-between;font-size:12px;padding:2px 0}
 @media (prefers-color-scheme:dark){.box{background:#161b22;color:#e6edf3;border-color:#30363d}button{background:#21262d;color:inherit;border-color:#30363d}.muted{color:#8b949e}.big{color:#3fb950}}
 `;
@@ -49,18 +49,22 @@ export function createOverlay(doc, lang, { onStop }) {
       if (!s.coupon && !s.offer) { line(t(lang, 'noneWorked')); }
       if (s.coupon) {
         line(`${t(lang, 'couponApplied')}: ${s.coupon.code}`);
+        const originKey = { user: 'originUser', listed: 'originListed', server: 'originShared', seed: 'originShared' }[s.coupon.origin];
+        if (originKey) line(t(lang, originKey), 'muted');
         line(`${t(lang, 'before')} ${formatRupees(s.baseline)} → ${t(lang, 'after')} ${formatRupees(s.coupon.payable)}`);
-        if (!s.finalApplied) line(`⚠ ${formatRupees(s.coupon.payable)}`, 'warn');
+        if (!s.finalApplied) line(t(lang, 'couponNotApplied', { code: s.coupon.code }), 'warn');
         line(`${t(lang, 'youSave')} ${formatRupees(s.coupon.saving)}`, 'big');
       }
       if (s.offer) {
         line(`${t(lang, 'bankOffer')}: ${s.offer.text}`);
         line(`${t(lang, 'estimate')}: −${formatRupees(s.offer.estimatedSaving)} → ${formatRupees(s.estimatedPayable)}`);
-        $('.muted').textContent = t(lang, 'bankHint');
+        $('.box > .muted').textContent = t(lang, 'bankHint');
       }
-      if (s.stopped === 'blocked_captcha') line(t(lang, 'captcha'), 'warn');
-      else if (s.stopped === 'aborted') line(t(lang, 'stopped'), 'warn');
-      if (unverified) $('.muted').textContent += ` ${t(lang, 'unverifiedSite')}`;
+      if (s.skipped?.length) line(t(lang, 'skippedIneligible', { codes: s.skipped.join(', ') }), 'muted');
+      if (s.preAppliedLost) line(t(lang, 'preAppliedLost'), 'warn');
+      const stopKey = { blocked_captcha: 'captcha', aborted: 'stopped', rate_limited: 'rateLimited', login_required: 'loginRequired', could_not_restore: 'couldNotRestore', panel_unavailable: 'noField' }[s.stopped];
+      if (stopKey) line(t(lang, stopKey), 'warn');
+      if (unverified) $('.box > .muted').textContent += ` ${t(lang, 'unverifiedSite')}`;
     },
     destroy: () => host.remove(),
   };

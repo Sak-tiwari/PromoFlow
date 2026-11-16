@@ -102,7 +102,10 @@
     }
     $('open-coupons').onclick = openDlg;
     $('close-dlg').onclick = closeDlg;
-    document.querySelectorAll('input[name=pick]').forEach((r) => { r.onchange = () => { $('c-input').value = r.value; }; });
+    const radios = document.querySelectorAll('input[name=pick]');
+    radios.forEach((r) => { r.onchange = () => { $('c-input').value = r.value; }; });
+    // Typing a code clears the list selection, like most coupon popups (so a later click on a listed coupon is a real change).
+    $('c-input').addEventListener('input', () => radios.forEach((r) => { r.checked = false; }));
 
     $('check').onclick = () => {
       if (LOGGED_OUT || !$('captcha-box').hidden) return;
@@ -129,7 +132,7 @@
       }, 120);
     };
     $('chip-remove').onclick = () => {
-      setTimeout(() => { applied = null; $('c-input').value = ''; message(''); render(); }, 80);
+      setTimeout(() => { applied = null; $('c-input').value = ''; radios.forEach((r) => { r.checked = false; }); message(''); render(); }, 80);
     };
     render();
   </script>

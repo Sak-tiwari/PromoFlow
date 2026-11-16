@@ -135,10 +135,11 @@ export function readPromoMessage(doc, input) {
 }
 
 /** Short texts that look like bank/card/payment offers. */
-export function readOfferTexts(doc, limit = 8) {
+export function readOfferTexts(root, limit = 8) {
+  const scope = root.body || root; // a document, or a container element
   const seen = new Set();
   const out = [];
-  for (const el of doc.body.querySelectorAll('p, li, div, span, label')) {
+  for (const el of scope.querySelectorAll('p, li, div, span, label')) {
     const t = (el.textContent || '').replace(/\s+/g, ' ').trim();
     if (t.length < 20 || t.length > 260 || !OFFER_WORDS.test(t) || seen.has(t)) continue;
     if ([...el.children].some((c) => OFFER_WORDS.test(c.textContent || ''))) continue; // take the leaf

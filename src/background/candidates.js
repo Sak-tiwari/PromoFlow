@@ -91,3 +91,40 @@ export class TtlCache {
     return c;
   }
 }
+
+const USER_ORIGIN = 'user';
+
+/**
+ * Merges the codes we already know with the codes the site itself lists for this cart.
+ *   known:  [{ code, origin }]  (origin: user | server | seed | known)
+ *   listed: [{ code, eligible }]  (from the site's own coupon list)
+ * Order: user codes, then eligible listed codes, then everything else. De-duplicated, the first origin wins,
+ * capped at `cap`. Codes the site lists as NOT applicable are never tried; they come back in `skipped`.
+ */
+export function mergeCandidates({ known = [], listed = [] } = {}, cap = 10) {
+  const knownNorm = known
+    .map((k) => (typeof k === 'string' ? { code: k, origin: 'known' } : k))
+    .map((k) => ({ code: normalizeCode(k?.code), origin: k?.origin || 'known' }))
+    .filter((k) => k.code.length > 0);
+  const listedNorm = listed
+    .map((l) => ({ code: normalizeCode(l?.code), eligible: l?.eligible !== false }))
+    .filter((l) => CODE_RE.test(l.code));
+
+  const skipped = [...new Set(listedNorm.filter((l) => !l.eligible).map((l) => l.code))];
+  const skip = new Set(skipped);
+
+  const ordered = [
+    ...knownNorm.filter((k) => k.origin === USER_ORIGIN),
+    ...listedNorm.filter((l) => l.eligible).map((l) => ({ code: l.code, origin: 'listed' })),
+    ...knownNorm.filter((k) => k.origin !== USER_ORIGIN),
+  ];
+  const seen = new Set();
+  const list = [];
+  for (const c of ordered) {
+    if (seen.has(c.code) || skip.has(c.code)) continue;
+    seen.add(c.code);
+    list.push(c);
+    if (list.length >= cap) break;
+  }
+  return { list, skipped };
+}

@@ -4,6 +4,7 @@ import { pickAdapter, normalizeHost } from '../adapters/index.js';
 import { createOverlay } from '../ui/overlay.js';
 import { t } from '../i18n/i18n.js';
 import { captureSnapshot } from './capture.js';
+import { shouldReport } from '../lib/telemetry.js';
 
 if (!window.__promoFlowLoaded) {
   window.__promoFlowLoaded = true;
@@ -22,27 +23,31 @@ if (!window.__promoFlowLoaded) {
     start(msg).catch((e) => console.warn('[Promo-Flow]', e?.message));
   });
 
-  async function start({ candidates, lang, overrides }) {
+  async function start({ candidates, lang, overrides, recipe }) {
     document.querySelectorAll('[data-promoflow]').forEach((n) => n.remove());
     if (running) running.abort();
     const ctrl = new AbortController();
     running = { abort: () => ctrl.abort() };
     const host = normalizeHost(location.hostname);
     const adapter = pickAdapter(host);
+    const siteRecipe = recipe && Array.isArray(recipe.hosts) && recipe.hosts.includes(host) ? recipe : null;
     const ui = createOverlay(document, lang, { onStop: () => ctrl.abort() });
     ui.working(t(lang, 'working'));
     try {
       const s = await runSearch({
-        doc: document, adapter, overrides: overrides || {}, candidates, signal: ctrl.signal,
+        doc: document, adapter, overrides: overrides || {}, recipe: siteRecipe, candidates, signal: ctrl.signal,
         onProgress: (p) => {
           if (p.phase === 'trying') ui.trying(p);
           else if (p.phase === 'result') {
             ui.result(p);
-            chrome.runtime.sendMessage({ type: 'PF_REPORT', domain: host, code: p.code, outcome: p.outcome }).catch(() => {});
+            // Never report a user's own codes (they may be personal) or a coupon that was merely already in the cart.
+            if (shouldReport(p.origin)) {
+              chrome.runtime.sendMessage({ type: 'PF_REPORT', domain: host, code: p.code, outcome: p.outcome }).catch(() => {});
+            }
           }
         },
       });
-      const failKey = { no_promo_field: 'noField', blocked_captcha: 'captcha', no_total: 'noTotal', no_codes: 'noCodes' }[s.status];
+      const failKey = { no_promo_field: 'noField', blocked_captcha: 'captcha', no_total: 'noTotal', no_codes: 'noCodes', login_required: 'loginRequired' }[s.status];
       if (s.status !== 'ok') ui.message(t(lang, failKey || 'noField'));
       else ui.summary(s, !!adapter.unverified);
     } finally {

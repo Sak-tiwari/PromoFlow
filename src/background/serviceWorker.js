@@ -2,6 +2,7 @@ import { buildCandidates, TtlCache } from './candidates.js';
 import { normalizeHost } from '../adapters/index.js';
 import { pickLang } from '../i18n/i18n.js';
 import seed from '../../backend/data/seed.json';
+import { bundledRecipes, recipeForHost } from '../adapters/bundledRecipes.js';
 
 const DEFAULTS = { apiBase: 'http://localhost:3000', telemetry: false, userCodes: [], lang: null };
 const TTL = 6 * 3600_000;
@@ -39,13 +40,15 @@ async function runOnTab(tabId, url) {
   const s = await settings();
   const server = await fetchServer(s.apiBase, host);
   const seedForHost = seed.coupons.filter((c) => c.domain === host);
-  const list = buildCandidates({ server, seed: seedForHost, user: s.userCodes }, 10).map((c) => c.code);
+  // Known codes keep their origin (user | server | seed): the engine reports only server/seed/listed ones, never a user's own codes.
+  const known = buildCandidates({ server, seed: seedForHost, user: s.userCodes }, 10).map((c) => ({ code: c.code, origin: c.origin }));
+  const recipe = recipeForHost(host, bundledRecipes);
   await chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] });
   const stored = await chrome.storage.local.get('overrides');
   await chrome.tabs.sendMessage(tabId, {
-    type: 'PF_START', candidates: list, lang: pickLang(s.lang, chrome.i18n.getUILanguage()), overrides: stored.overrides?.[host],
+    type: 'PF_START', candidates: known, recipe, lang: pickLang(s.lang, chrome.i18n.getUILanguage()), overrides: stored.overrides?.[host],
   });
-  return { ok: true, count: list.length };
+  return { ok: true, count: known.length };
 }
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {

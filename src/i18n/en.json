@@ -41,5 +41,14 @@
  "diagnoseDownload": "Download",
  "diagnoseNotice": "The snapshot is copied on this device and sent nowhere.",
  "diagnoseCopied": "Copied.",
- "diagnoseFailed": "Could not capture this page."
+ "diagnoseFailed": "Could not capture this page.",
+ "loginRequired": "This site needs you to log in before coupons can be applied. Log in, then try again.",
+ "rateLimited": "The site is limiting coupon attempts. Stopped to avoid problems; try again later.",
+ "originUser": "From your own codes",
+ "originListed": "Listed by the site for your cart",
+ "originShared": "From the shared list",
+ "skippedIneligible": "Skipped, the site says not applicable: {codes}",
+ "couponNotApplied": "The best coupon ({code}) is not applied right now. Enter it yourself to get this saving.",
+ "preAppliedLost": "A coupon that was already applied was removed during the search. Re-apply it if you still want it.",
+ "couldNotRestore": "Could not remove the last coupon tried. Check your cart total before paying."
 }
