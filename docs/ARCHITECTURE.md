@@ -61,9 +61,9 @@ Stops, hands-off and without a final re-apply: login wall, CAPTCHA, rate-limit w
 | Structure | Location | Job |
 |---|---|---|
 | Trie | `Trie.js` | Try/success counters per code, prior for unseen codes |
-| MaxHeap | `Heap.js` | Top-K candidates, best first |
-| MinHeap | `Heap.js` | Expiry order of the TTL cache (persisted, restored on wake) |
-| Grouped knapsack DP | `knapsack` | Best pick across the coupon group and the offer group; validated against brute force on 400 random cases |
+| MaxHeap | `MaxHeap.js` | Top-K candidates, best first |
+| MinHeap | `MinHeap.js` | Expiry order of the TTL cache (persisted, restored on wake) |
+| Grouped knapsack DP | `Knapsack.js` | Best pick across the coupon group and the offer group; validated against brute force on 400 random cases |
 | Wilson lower bound | `ranking.js` | Fair server ranking when a code has few reports |
 
 All money is integer paise. A saving is only ever a difference of measured page totals; bank-offer figures are labelled estimates.
