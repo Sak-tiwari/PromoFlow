@@ -3,6 +3,7 @@ import { runSearch } from './applyEngine.js';
 import { pickAdapter, normalizeHost } from '../adapters/index.js';
 import { createOverlay } from '../ui/overlay.js';
 import { t } from '../i18n/i18n.js';
+import { captureSnapshot } from './capture.js';
 
 if (!window.__promoFlowLoaded) {
   window.__promoFlowLoaded = true;
@@ -11,6 +12,11 @@ if (!window.__promoFlowLoaded) {
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg?.type === 'PF_PING') { sendResponse({ ok: true }); return; }
     if (msg?.type === 'PF_STOP') { running?.abort(); sendResponse({ ok: true }); return; }
+    if (msg?.type === 'PF_CAPTURE') {
+      try { sendResponse({ ok: true, snapshot: captureSnapshot(document, { state: msg.state }) }); }
+      catch (e) { sendResponse({ ok: false, error: String(e?.message || e) }); }
+      return;
+    }
     if (msg?.type !== 'PF_START') return;
     sendResponse({ ok: true });
     start(msg).catch((e) => console.warn('[Promo-Flow]', e?.message));

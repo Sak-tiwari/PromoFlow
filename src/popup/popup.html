@@ -14,5 +14,15 @@
 <label for="api" id="apiL"></label>
 <input id="api" type="url" spellcheck="false">
 <button id="save"></button>
+<hr>
+<h2 id="diagTitle"></h2>
+<label for="state" id="stateL"></label>
+<select id="state">
+  <option value="bag"></option><option value="coupon_panel_open"></option><option value="coupon_applied"></option>
+  <option value="coupon_error"></option><option value="payment"></option>
+</select>
+<div class="btns"><button id="copy"></button><button id="dl"></button></div>
+<p id="diagNotice" class="muted"></p>
+<p id="diagStatus" class="muted" role="status"></p>
 <script src="popup.js"></script>
 </body></html>

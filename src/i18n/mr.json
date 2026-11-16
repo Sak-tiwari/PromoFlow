@@ -29,5 +29,17 @@
  "stopped": "थांबवले.",
  "unverifiedSite": "या साइटचा सपोर्ट प्रायोगिक आहे. पैसे भरण्यापूर्वी अंतिम रक्कम तपासा.",
  "notCheckout": "आधी कार्ट किंवा पेमेंट पान उघडा.",
- "capReached": "कमाल प्रयत्नांनंतर थांबले."
+ "capReached": "कमाल प्रयत्नांनंतर थांबले.",
+ "diagnoseTitle": "हे पान तपासा",
+ "diagnoseState": "पानाची स्थिती",
+ "stateBag": "बॅग / कार्ट",
+ "stateCouponPanelOpen": "कूपन पॅनल उघडे",
+ "stateCouponApplied": "कूपन लागू",
+ "stateCouponError": "कूपन त्रुटी",
+ "statePayment": "पेमेंट पान",
+ "diagnoseCopy": "स्नॅपशॉट कॉपी करा",
+ "diagnoseDownload": "डाउनलोड",
+ "diagnoseNotice": "स्नॅपशॉट याच डिव्हाइसवर कॉपी होतो, कुठेही पाठवला जात नाही.",
+ "diagnoseCopied": "कॉपी झाले.",
+ "diagnoseFailed": "हे पान कॅप्चर करता आले नाही."
 }

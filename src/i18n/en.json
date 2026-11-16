@@ -29,5 +29,17 @@
  "stopped": "Stopped.",
  "unverifiedSite": "This site's support is experimental. Check the final total before paying.",
  "notCheckout": "Open the cart or payment page first.",
- "capReached": "Stopped after the maximum number of tries."
+ "capReached": "Stopped after the maximum number of tries.",
+ "diagnoseTitle": "Diagnose this page",
+ "diagnoseState": "Page state",
+ "stateBag": "Bag / cart",
+ "stateCouponPanelOpen": "Coupon panel open",
+ "stateCouponApplied": "Coupon applied",
+ "stateCouponError": "Coupon error",
+ "statePayment": "Payment page",
+ "diagnoseCopy": "Copy snapshot",
+ "diagnoseDownload": "Download",
+ "diagnoseNotice": "The snapshot is copied on this device and sent nowhere.",
+ "diagnoseCopied": "Copied.",
+ "diagnoseFailed": "Could not capture this page."
 }

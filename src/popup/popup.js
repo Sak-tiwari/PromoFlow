@@ -1,4 +1,5 @@
 import { LANGS, t, pickLang } from '../i18n/i18n.js';
+import { snapshotToDocument, snapshotFileName } from '../content/capture.js';
 
 const $ = (id) => document.getElementById(id);
 let lang = 'en';
@@ -13,6 +14,13 @@ function render() {
   $('teleL').textContent = t(lang, 'telemetry');
   $('teleHint').textContent = t(lang, 'telemetryHint');
   $('apiL').textContent = t(lang, 'apiBase');
+  $('diagTitle').textContent = t(lang, 'diagnoseTitle');
+  $('stateL').textContent = t(lang, 'diagnoseState');
+  const names = ['stateBag', 'stateCouponPanelOpen', 'stateCouponApplied', 'stateCouponError', 'statePayment'];
+  [...$('state').options].forEach((o, i) => { o.textContent = t(lang, names[i]); });
+  $('copy').textContent = t(lang, 'diagnoseCopy');
+  $('dl').textContent = t(lang, 'diagnoseDownload');
+  $('diagNotice').textContent = t(lang, 'diagnoseNotice');
   $('save').textContent = t(lang, 'addCode');
   $('lang').setAttribute('aria-label', t(lang, 'language'));
   document.documentElement.lang = lang;
@@ -36,6 +44,32 @@ async function init() {
     await chrome.storage.local.set({ userCodes: codes, apiBase: $('api').value.trim() || 'http://localhost:3000' });
     $('codes').value = codes.join('\n');
     $('status').textContent = '✓';
+  });
+  async function takeSnapshot() {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab?.url || !/^https?:/.test(tab.url)) { $('diagStatus').textContent = t(lang, 'notCheckout'); return null; }
+    try {
+      await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] });
+      const r = await chrome.tabs.sendMessage(tab.id, { type: 'PF_CAPTURE', state: $('state').value });
+      if (r?.ok) return r.snapshot;
+    } catch { /* falls through */ }
+    $('diagStatus').textContent = t(lang, 'diagnoseFailed');
+    return null;
+  }
+  $('copy').addEventListener('click', async () => {
+    const snap = await takeSnapshot();
+    if (!snap) return;
+    await navigator.clipboard.writeText(snapshotToDocument(snap));
+    $('diagStatus').textContent = t(lang, 'diagnoseCopied');
+  });
+  $('dl').addEventListener('click', async () => {
+    const snap = await takeSnapshot();
+    if (!snap) return;
+    const url = URL.createObjectURL(new Blob([snapshotToDocument(snap)], { type: 'text/html' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = snapshotFileName(snap); a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    $('diagStatus').textContent = t(lang, 'diagnoseCopied');
   });
   $('go').addEventListener('click', async () => {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });

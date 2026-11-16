@@ -29,5 +29,17 @@
  "stopped": "रोक दिया गया।",
  "unverifiedSite": "इस साइट का समर्थन प्रायोगिक है। भुगतान से पहले अंतिम राशि जाँच लें।",
  "notCheckout": "पहले कार्ट या पेमेंट पेज खोलें।",
- "capReached": "अधिकतम कोशिशों के बाद रुक गया।"
+ "capReached": "अधिकतम कोशिशों के बाद रुक गया।",
+ "diagnoseTitle": "इस पेज की जाँच",
+ "diagnoseState": "पेज की स्थिति",
+ "stateBag": "बैग / कार्ट",
+ "stateCouponPanelOpen": "कूपन पैनल खुला",
+ "stateCouponApplied": "कूपन लागू",
+ "stateCouponError": "कूपन में त्रुटि",
+ "statePayment": "पेमेंट पेज",
+ "diagnoseCopy": "स्नैपशॉट कॉपी करें",
+ "diagnoseDownload": "डाउनलोड",
+ "diagnoseNotice": "स्नैपशॉट इसी डिवाइस पर कॉपी होता है, कहीं भेजा नहीं जाता।",
+ "diagnoseCopied": "कॉपी हो गया।",
+ "diagnoseFailed": "इस पेज का स्नैपशॉट नहीं लिया जा सका।"
 }
