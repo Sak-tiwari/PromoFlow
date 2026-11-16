@@ -3,6 +3,7 @@ import { normalizeHost } from '../adapters/index.js';
 import { pickLang } from '../i18n/i18n.js';
 import seed from '../../backend/data/seed.json';
 import { bundledRecipes, recipeForHost } from '../adapters/bundledRecipes.js';
+import { chooseRecipe } from '../adapters/recipeSource.js';
 
 const DEFAULTS = { apiBase: 'http://localhost:3000', telemetry: false, userCodes: [], lang: null };
 const TTL = 6 * 3600_000;
@@ -35,6 +36,26 @@ async function fetchServer(apiBase, domain) {
   } catch { return []; } // offline or backend down: fall back to bundled seed and user codes
 }
 
+/** The recipe for a host: the backend's copy (cached for the TTL under `recipe:<host>`) or the bundled one, whichever is newer. */
+async function getRecipe(apiBase, host) {
+  const bundled = recipeForHost(host, bundledRecipes);
+  const cache = await loadCache();
+  const key = `recipe:${host}`;
+  let entry = cache.get(key);
+  if (entry === undefined) {
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 4000);
+      const r = await fetch(`${apiBase.replace(/\/$/, '')}/api/v1/stores/${encodeURIComponent(host)}/config`, { signal: ctrl.signal });
+      clearTimeout(timer);
+      if (r.ok) entry = { recipe: (await r.json()).recipe ?? null };
+      else if (r.status === 404) entry = { recipe: null };
+      if (entry) { cache.set(key, entry); await saveCache(cache); }
+    } catch { /* offline: use the bundled recipe */ }
+  }
+  return chooseRecipe(host, entry?.recipe ?? null, bundled);
+}
+
 async function runOnTab(tabId, url) {
   const host = normalizeHost(new URL(url).hostname);
   const s = await settings();
@@ -42,7 +63,7 @@ async function runOnTab(tabId, url) {
   const seedForHost = seed.coupons.filter((c) => c.domain === host);
   // Known codes keep their origin (user | server | seed): the engine reports only server/seed/listed ones, never a user's own codes.
   const known = buildCandidates({ server, seed: seedForHost, user: s.userCodes }, 10).map((c) => ({ code: c.code, origin: c.origin }));
-  const recipe = recipeForHost(host, bundledRecipes);
+  const recipe = await getRecipe(s.apiBase, host);
   await chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] });
   const stored = await chrome.storage.local.get('overrides');
   await chrome.tabs.sendMessage(tabId, {

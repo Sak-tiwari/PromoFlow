@@ -4,6 +4,7 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { rankCoupons } from './ranking.js';
+import { validateRecipe } from '../src/adapters/recipe.js';
 
 const DOMAIN_RE = /^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$/;
 const CODE_RE = /^[A-Z0-9_-]{3,32}$/;
@@ -17,7 +18,8 @@ const reportSchema = z.object({
 
 const normDomain = (d) => String(d || '').toLowerCase().replace(/^www\./, '');
 
-export function createApp({ repo, allowedOrigins = [] } = {}) {
+/** recipes: Map<host, validated recipe> (see backend/recipes.js). A recipe stored on the store document wins if it validates. */
+export function createApp({ repo, allowedOrigins = [], recipes = new Map() } = {}) {
   const app = express();
   app.disable('x-powered-by');
   app.use(helmet());
@@ -57,9 +59,15 @@ export function createApp({ repo, allowedOrigins = [] } = {}) {
 
   app.get('/api/v1/stores/:domain/config', limiter(120), async (req, res, next) => {
     try {
-      const store = await repo.getStore(normDomain(req.params.domain));
-      if (!store) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Unknown store' } });
-      res.json(store);
+      const domain = normDomain(req.params.domain);
+      if (!DOMAIN_RE.test(domain)) return res.status(400).json({ error: { code: 'BAD_DOMAIN', message: 'Invalid domain' } });
+      const store = await repo.getStore(domain);
+      // Anything stored in the database is re-validated before it is served: a recipe is data the extension will act on.
+      const fromStore = store?.recipe ? validateRecipe(store.recipe) : null;
+      const recipe = fromStore?.ok && fromStore.recipe.hosts.includes(domain) ? fromStore.recipe : (recipes.get(domain) ?? null);
+      if (!store && !recipe) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Unknown store' } });
+      const { recipe: _unvalidated, ...rest } = store ?? { domain, name: domain, adapter: 'generic' };
+      res.json({ ...rest, recipe });
     } catch (e) { next(e); }
   });
 
