@@ -4,6 +4,7 @@ import { pickLang } from '../i18n/i18n.js';
 import seed from '../../backend/data/seed.json';
 import { bundledRecipes, recipeForHost } from '../adapters/bundledRecipes.js';
 import { chooseRecipe } from '../adapters/recipeSource.js';
+import { makeLast, freshLast, lastKey } from '../lib/lastResult.js';
 
 const DEFAULTS = { apiBase: 'http://localhost:3000', telemetry: false, userCodes: [], lang: null };
 const TTL = 6 * 3600_000;
@@ -75,6 +76,16 @@ async function runOnTab(tabId, url) {
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg?.type === 'PF_RUN') {
     runOnTab(msg.tabId, msg.url).then(sendResponse, (e) => sendResponse({ ok: false, error: String(e?.message || e) }));
+    return true;
+  }
+  if (msg?.type === 'PF_SAVE_LAST') {
+    const entry = makeLast(msg);
+    if (entry) chrome.storage.session.set({ [lastKey(entry.host)]: entry });
+    return false;
+  }
+  if (msg?.type === 'PF_GET_LAST') {
+    const host = String(msg.host || '').toLowerCase();
+    chrome.storage.session.get(lastKey(host)).then((r) => sendResponse(freshLast(r[lastKey(host)], host)), () => sendResponse(null));
     return true;
   }
   if (msg?.type === 'PF_REPORT') {

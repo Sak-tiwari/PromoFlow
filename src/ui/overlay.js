@@ -66,6 +66,25 @@ export function createOverlay(doc, lang, { onStop }) {
       if (stopKey) line(t(lang, stopKey), 'warn');
       if (unverified) $('.box > .muted').textContent += ` ${t(lang, 'unverifiedSite')}`;
     },
+    note(text) { const d = doc.createElement('div'); d.className = 'muted'; d.textContent = text; $('.msg').appendChild(d); },
+    payment(res) {
+      setClose();
+      const m = $('.msg'); m.textContent = '';
+      const line = (txt, cls) => { const d = doc.createElement('div'); if (cls) d.className = cls; d.textContent = txt; m.appendChild(d); };
+      if (res.status !== 'ok') { line(t(lang, 'noTotal'), 'warn'); return; }
+      if (res.coupon) {
+        line(`${t(lang, 'couponApplied')}: ${res.coupon.code}`);
+        line(`${t(lang, 'youSave')} ${formatRupees(res.coupon.saving)}`, 'big');
+      }
+      line(`${t(lang, 'totalOnPage')}: ${formatRupees(res.total)}`);
+      if (res.offer) {
+        line(`${t(lang, 'bankOffer')}: ${res.offer.text}`);
+        line(`${t(lang, 'estimate')}: −${formatRupees(res.offer.estimatedSaving)} → ${formatRupees(res.estimatedPayable)}`);
+        $('.box > .muted').textContent = t(lang, 'bankHint');
+      } else {
+        line(t(lang, 'noOffers'));
+      }
+    },
     destroy: () => host.remove(),
   };
 }

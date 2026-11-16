@@ -5,6 +5,8 @@ import { createOverlay } from '../ui/overlay.js';
 import { t } from '../i18n/i18n.js';
 import { captureSnapshot } from './capture.js';
 import { shouldReport } from '../lib/telemetry.js';
+import { pageKind } from '../adapters/recipe.js';
+import { adviseOnPayment } from './paymentAdvice.js';
 
 if (!window.__promoFlowLoaded) {
   window.__promoFlowLoaded = true;
@@ -33,6 +35,14 @@ if (!window.__promoFlowLoaded) {
     const siteRecipe = recipe && Array.isArray(recipe.hosts) && recipe.hosts.includes(host) ? recipe : null;
     const ui = createOverlay(document, lang, { onStop: () => ctrl.abort() });
     ui.working(t(lang, 'working'));
+    // A payment page only gets read-only advice. The coupon search never runs there.
+    if (siteRecipe && pageKind(siteRecipe, location.pathname) === 'payment') {
+      try {
+        const last = await chrome.runtime.sendMessage({ type: 'PF_GET_LAST', host }).catch(() => null);
+        ui.payment(adviseOnPayment({ doc: document, recipe: siteRecipe, last }));
+      } finally { running = null; }
+      return;
+    }
     try {
       const s = await runSearch({
         doc: document, adapter, overrides: overrides || {}, recipe: siteRecipe, candidates, signal: ctrl.signal,
@@ -49,7 +59,14 @@ if (!window.__promoFlowLoaded) {
       });
       const failKey = { no_promo_field: 'noField', blocked_captcha: 'captcha', no_total: 'noTotal', no_codes: 'noCodes', login_required: 'loginRequired' }[s.status];
       if (s.status !== 'ok') ui.message(t(lang, failKey || 'noField'));
-      else ui.summary(s, !!adapter.unverified);
+      else {
+        ui.summary(s, !!adapter.unverified);
+        if (s.coupon && s.finalApplied) {
+          // Remember the result for the payment page (the service worker keeps it for 30 minutes, in session storage).
+          chrome.runtime.sendMessage({ type: 'PF_SAVE_LAST', host, code: s.coupon.code, baseline: s.baseline, payable: s.finalPayable }).catch(() => {});
+        }
+        if (siteRecipe?.pages?.payment) ui.note(t(lang, 'payHint'));
+      }
     } finally {
       running = null;
     }

@@ -50,5 +50,8 @@
  "skippedIneligible": "Skipped, the site says not applicable: {codes}",
  "couponNotApplied": "The best coupon ({code}) is not applied right now. Enter it yourself to get this saving.",
  "preAppliedLost": "A coupon that was already applied was removed during the search. Re-apply it if you still want it.",
- "couldNotRestore": "Could not remove the last coupon tried. Check your cart total before paying."
+ "couldNotRestore": "Could not remove the last coupon tried. Check your cart total before paying.",
+ "noOffers": "No instant bank offers found on this page.",
+ "payHint": "Next: open the payment page and click Promo-Flow again to see the best bank offer.",
+ "totalOnPage": "Total on this page"
 }
