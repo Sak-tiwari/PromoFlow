@@ -65,7 +65,8 @@ if (!window.__promoFlowLoaded) {
           // Remember the result for the payment page (the service worker keeps it for 30 minutes, in session storage).
           chrome.runtime.sendMessage({ type: 'PF_SAVE_LAST', host, code: s.coupon.code, baseline: s.baseline, payable: s.finalPayable }).catch(() => {});
         }
-        if (siteRecipe?.pages?.payment) ui.note(t(lang, 'payHint'));
+        // Only when this page is the recipe's bag page (not when the generic detector ran on some other page of the host).
+        if (siteRecipe?.pages?.payment && pageKind(siteRecipe, location.pathname) === 'bag') ui.note(t(lang, 'payHint'));
       }
     } finally {
       running = null;

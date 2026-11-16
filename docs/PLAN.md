@@ -1,5 +1,10 @@
 # Promo-Flow (browser extension): implementation plan v2
 
+> **Update 16 Nov 2026.** The current plan for Myntra, Ajio and Nykaa, and the milestone-by-milestone build, is
+> [V2_BUILD_BRIEF.md](V2_BUILD_BRIEF.md). This v2 plan below is the original product plan. The Amazon and Flipkart adapters in
+> `src/adapters/index.js` are **unverified legacy**: they were written from memory and have never been run on the live sites. They
+> become recipes only if fixtures are supplied (see `tests/fixtures/README.md`).
+
 Status: **Proposed.** Builds on your original `promo_flow_implementation_plan.txt` and the first plan I wrote, and applies
 your later answers. Nothing here is built yet.
 
