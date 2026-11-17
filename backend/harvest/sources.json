@@ -1,0 +1,25 @@
+{
+  "sources": [
+    {
+      "name": "example-affiliate-feed",
+      "type": "jsonFeed",
+      "source": "feed",
+      "enabled": false,
+      "url": "https://api.example-network.in/v1/coupons?country=IN",
+      "apiKeyEnv": "FEED_API_KEY",
+      "apiKeyHeader": "Authorization",
+      "apiKeyPrefix": "Token ",
+      "itemsPath": "data.offers",
+      "fields": { "code": "coupon_code", "url": "merchant_url", "expiresAt": "end_date", "description": "title", "startedAt": "start_date" },
+      "domains": ["myntra.com", "ajio.com", "nykaa.com", "flipkart.com", "amazon.in"]
+    },
+    {
+      "name": "local-dataset",
+      "type": "file",
+      "source": "dataset",
+      "enabled": false,
+      "file": "coupons.csv",
+      "domains": ["myntra.com", "ajio.com", "nykaa.com", "flipkart.com", "amazon.in"]
+    }
+  ]
+}

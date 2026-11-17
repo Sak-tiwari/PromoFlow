@@ -1,6 +1,13 @@
 # V3 plan: find fresh coupons from the web, rank them, try the best, compare
 
-Status: plan only. Nothing here is built yet.
+Status (17 Nov 2026): H1–H7 built and tested (148 tests; demo store checked in real Chromium). H8 (live Myntra check) is open.
+**No outside source is switched on**: that waits for the owner's decisions in section 6.
+
+Changes from the plan while building:
+- The cart total is **not** sent to the server. The server sends each code's minimum spend; the extension drops codes above its cart itself.
+- "Try 6 more" uses the 30 codes fetched at the start, so it needs no second server call. The coupon left applied by the previous run is
+  measured again, so it takes one of the tries (the button says how many new codes it will try).
+- Scheduled job: `.github/workflows/harvest.yml` (every 6 hours) runs only when the `MONGODB_URI` repository secret is set.
 
 ## 1. Goal
 

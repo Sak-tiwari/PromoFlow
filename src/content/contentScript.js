@@ -7,6 +7,9 @@ import { captureSnapshot } from './capture.js';
 import { shouldReport } from '../lib/telemetry.js';
 import { pageKind } from '../adapters/recipe.js';
 import { adviseOnPayment } from './paymentAdvice.js';
+import { offerShare } from './share.js';
+
+const MORE_COOLDOWN_MS = 30_000;
 
 if (!window.__promoFlowLoaded) {
   window.__promoFlowLoaded = true;
@@ -25,7 +28,8 @@ if (!window.__promoFlowLoaded) {
     start(msg).catch((e) => console.warn('[Promo-Flow]', e?.message));
   });
 
-  async function start({ candidates, lang, overrides, recipe }) {
+  async function start(msg) {
+    const { candidates, lang, overrides, recipe, shareMode = 'ask', exclude = [] } = msg;
     document.querySelectorAll('[data-promoflow]').forEach((n) => n.remove());
     if (running) running.abort();
     const ctrl = new AbortController();
@@ -34,6 +38,7 @@ if (!window.__promoFlowLoaded) {
     const adapter = pickAdapter(host);
     const siteRecipe = recipe && Array.isArray(recipe.hosts) && recipe.hosts.includes(host) ? recipe : null;
     const ui = createOverlay(document, lang, { onStop: () => ctrl.abort() });
+    const metaByCode = new Map((candidates || []).filter((c) => c && typeof c === 'object').map((c) => [String(c.code).toUpperCase(), c]));
     ui.working(t(lang, 'working'));
     // A payment page only gets read-only advice. The coupon search never runs there.
     if (siteRecipe && pageKind(siteRecipe, location.pathname) === 'payment') {
@@ -45,11 +50,11 @@ if (!window.__promoFlowLoaded) {
     }
     try {
       const s = await runSearch({
-        doc: document, adapter, overrides: overrides || {}, recipe: siteRecipe, candidates, signal: ctrl.signal,
+        doc: document, adapter, overrides: overrides || {}, recipe: siteRecipe, candidates, exclude, signal: ctrl.signal,
         onProgress: (p) => {
           if (p.phase === 'trying') ui.trying(p);
           else if (p.phase === 'result') {
-            ui.result(p);
+            ui.result({ ...p, meta: metaByCode.get(p.code) });
             // Never report a user's own codes (they may be personal) or a coupon that was merely already in the cart.
             if (shouldReport(p.origin)) {
               chrome.runtime.sendMessage({ type: 'PF_REPORT', domain: host, code: p.code, outcome: p.outcome }).catch(() => {});
@@ -67,9 +72,18 @@ if (!window.__promoFlowLoaded) {
         }
         // Only when this page is the recipe's bag page (not when the generic detector ran on some other page of the host).
         if (siteRecipe?.pages?.payment && pageKind(siteRecipe, location.pathname) === 'bag') ui.note(t(lang, 'payHint'));
+        offerShare(ui, s, { host, lang, shareMode });
+        // "Try N more": the next codes in the list, after a cooldown, only on a click. The best coupon so far is re-measured.
+        if (s.remaining > 0 && !s.stopped && s.cap - (s.finalApplied ? 1 : 0) > 0) {
+          const tried = [...new Set([...exclude, ...s.tried])];
+          // The coupon left applied is measured again in the next run, so it takes one of the tries.
+          const n = Math.min(s.remaining, s.cap - (s.finalApplied ? 1 : 0));
+          ui.tryMore({ n, cooldownMs: MORE_COOLDOWN_MS, onClick: () => start({ ...msg, exclude: tried }) });
+        }
       }
     } finally {
       running = null;
     }
   }
 }
+

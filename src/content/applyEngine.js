@@ -51,7 +51,7 @@ const HANDS_OFF = new Set(['blocked_captcha', 'rate_limited', 'login_required'])
  *   recipe:     optional validated recipe; used when its "bag" page matches the current path, else the generic detector runs
  * Precedence for pacing: explicit cfg > the recipe's limits > engine defaults.
  */
-export async function runSearch({ doc, adapter, overrides = {}, recipe = null, candidates, signal, onProgress = () => {}, cfg = {} }) {
+export async function runSearch({ doc, adapter, overrides = {}, recipe = null, candidates, exclude = [], signal, onProgress = () => {}, cfg = {}, now = Date.now() }) {
   const base = {
     maxAttempts: 10, delayMs: 500, jitterMs: 250, settleMs: 4000, pollMs: 100, stableMs: 300, minWaitMs: 700,
     sleep: defaultSleep, random: Math.random, ...cfg,
@@ -86,6 +86,10 @@ export async function runSearch({ doc, adapter, overrides = {}, recipe = null, c
   if (readTotal() == null) return { status: 'no_total' };
 
   const known = (candidates || []).map((x) => (typeof x === 'string' ? { code: x, origin: 'known' } : x));
+  // "Try more": codes tried in an earlier run are not tried again. They still count for spotting a coupon already applied.
+  const skipCodes = new Set(exclude.map((x) => String(x).trim().toUpperCase()));
+  const notExcluded = (x) => !skipCodes.has(String(x.code).trim().toUpperCase());
+  const listedNow = () => driver.listCodes().filter(notExcluded);
 
   // 2. A coupon may already be applied. Find out which one (only by matching KNOWN codes against the page text),
   //    then remove it so the baseline is the true price without promotions.
@@ -97,7 +101,7 @@ export async function runSearch({ doc, adapter, overrides = {}, recipe = null, c
     preApplied = { code };
   }
 
-  const first = mergeCandidates({ known, listed: driver.listCodes() }, c.maxAttempts);
+  const first = mergeCandidates({ known: known.filter(notExcluded), listed: listedNow() }, c.maxAttempts);
   if (!first.list.length && !preApplied?.code) return { status: 'no_codes', baseline: readTotal(), skipped: first.skipped };
 
   if (preApplied) {
@@ -110,13 +114,22 @@ export async function runSearch({ doc, adapter, overrides = {}, recipe = null, c
   const baseline = readTotal();
   if (baseline == null) return { status: 'no_total' };
 
+  // Known codes whose stated minimum spend is above this cart, or that have expired, are not tried (the cart total never leaves the page).
+  const tooSmall = [];
+  const usable = known.filter(notExcluded).filter((k) => {
+    if (k.expiresAt != null && k.expiresAt < now) return false;
+    if (Number.isInteger(k.minSpend) && k.minSpend > baseline) { tooSmall.push(String(k.code).toUpperCase()); return false; }
+    return true;
+  });
+
   // Fresh listing after the removal; a coupon that was applied before is measured like any other code.
-  const merged = mergeCandidates({ known, listed: driver.listCodes() }, c.maxAttempts);
+  const listedAfter = listedNow();
+  const merged = mergeCandidates({ known: usable, listed: listedAfter }, c.maxAttempts);
   let list = merged.list;
   if (preApplied?.code && !list.some((x) => x.code === preApplied.code)) {
     list = [{ code: preApplied.code, origin: 'preapplied' }, ...list].slice(0, c.maxAttempts);
   }
-  if (!list.length) return { status: 'no_codes', baseline, skipped: merged.skipped };
+  if (!list.length) return { status: 'no_codes', baseline, skipped: merged.skipped, skippedMinSpend: tooSmall };
 
   const trial = async (code) => {
     const before = readTotal();
@@ -193,6 +206,11 @@ export async function runSearch({ doc, adapter, overrides = {}, recipe = null, c
     baseline,
     results,
     skipped: merged.skipped,
+    skippedMinSpend: tooSmall.filter((x) => !merged.skipped.includes(x)),
+    tried: results.map((r) => r.code),
+    cap: c.maxAttempts,
+    // Codes still untried for this cart (for "Try more"). Codes tried before this run were excluded already.
+    remaining: mergeCandidates({ known: usable, listed: listedAfter }, 1000).list.filter((x) => !results.some((r) => r.code === x.code)).length,
     coupon: couponPick
       ? { code: couponPick.id, payable: couponPick.payableAfter, saving: baseline - couponPick.payableAfter, origin: results.find((r) => r.code === couponPick.id)?.origin }
       : null,

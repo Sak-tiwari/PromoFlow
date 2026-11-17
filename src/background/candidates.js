@@ -5,6 +5,8 @@ import { Trie, normalizeCode } from '../algorithms/Trie.js';
 import { MaxHeap, MinHeap } from '../algorithms/Heap.js';
 
 const CODE_RE = /^[A-Z0-9_-]{3,32}$/;
+/** Fields from the server kept on each candidate: used for the cart-size check and the overlay's source/age labels. */
+export const META_KEYS = ['source', 'lastSeen', 'lastSuccessAt', 'expiresAt', 'minSpend', 'firstOrderOnly'];
 
 /**
  * Merge code sources and return the top-K codes to try, best first.
@@ -17,7 +19,9 @@ export function buildCandidates({ server = [], seed = [], user = [] }, k = 10) {
     const code = normalizeCode(item.code);
     if (!code || !CODE_RE.test(code)) return;
     const prev = byCode.get(code);
-    byCode.set(code, { code, origin: prev?.origin ?? origin, score: item.score ?? prev?.score, stats: item.stats ?? prev?.stats });
+    const meta = {};
+    for (const k of META_KEYS) if (item[k] != null) meta[k] = item[k];
+    byCode.set(code, { ...prev, ...meta, code, origin: prev?.origin ?? origin, score: item.score ?? prev?.score, stats: item.stats ?? prev?.stats });
     if (item.stats && item.stats.tries >= 0) trie.recordCounts(code, item.stats.tries, Math.min(item.stats.successes ?? 0, item.stats.tries));
   };
   seed.forEach((c) => add(c, 'seed'));

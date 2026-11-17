@@ -1,4 +1,13 @@
-import { buildCandidates, TtlCache } from './candidates.js';
+import { buildCandidates, TtlCache, META_KEYS } from './candidates.js';
+
+const SHARE_MODES = ['ask', 'always', 'never'];
+
+async function clientIdOf(s) {
+  if (s.clientId) return s.clientId;
+  const clientId = crypto.randomUUID();
+  await chrome.storage.local.set({ clientId });
+  return clientId;
+}
 import { normalizeHost } from '../adapters/index.js';
 import { pickLang } from '../i18n/i18n.js';
 import seed from '../../backend/data/seed.json';
@@ -6,11 +15,12 @@ import { bundledRecipes, recipeForHost } from '../adapters/bundledRecipes.js';
 import { chooseRecipe } from '../adapters/recipeSource.js';
 import { makeLast, freshLast, lastKey } from '../lib/lastResult.js';
 
-const DEFAULTS = { apiBase: 'http://localhost:3000', telemetry: false, userCodes: [], lang: null };
+const DEFAULTS = { apiBase: 'http://localhost:3000', telemetry: false, userCodes: [], lang: null, shareMode: 'ask' };
+const SERVER_K = 30; // enough for several "Try 6 more" rounds without asking the server again
 const TTL = 6 * 3600_000;
 
 async function settings() {
-  const s = await chrome.storage.local.get(['apiBase', 'telemetry', 'userCodes', 'lang', 'clientId', 'cache']);
+  const s = await chrome.storage.local.get(['apiBase', 'telemetry', 'userCodes', 'lang', 'clientId', 'cache', 'shareMode']);
   return { ...DEFAULTS, ...s };
 }
 
@@ -27,7 +37,7 @@ async function fetchServer(apiBase, domain) {
   try {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 4000);
-    const r = await fetch(`${apiBase.replace(/\/$/, '')}/api/v1/coupons/${encodeURIComponent(domain)}`, { signal: ctrl.signal });
+    const r = await fetch(`${apiBase.replace(/\/$/, '')}/api/v1/coupons/${encodeURIComponent(domain)}?k=${SERVER_K}`, { signal: ctrl.signal });
     clearTimeout(timer);
     if (!r.ok) return [];
     const { coupons } = await r.json();
@@ -63,12 +73,17 @@ async function runOnTab(tabId, url) {
   const server = await fetchServer(s.apiBase, host);
   const seedForHost = seed.coupons.filter((c) => c.domain === host);
   // Known codes keep their origin (user | server | seed): the engine reports only server/seed/listed ones, never a user's own codes.
-  const known = buildCandidates({ server, seed: seedForHost, user: s.userCodes }, 10).map((c) => ({ code: c.code, origin: c.origin }));
+  const known = buildCandidates({ server, seed: seedForHost, user: s.userCodes }, SERVER_K).map((c) => {
+    const out = { code: c.code, origin: c.origin };
+    for (const k of META_KEYS) if (c[k] != null) out[k] = c[k];
+    return out;
+  });
   const recipe = await getRecipe(s.apiBase, host);
   await chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] });
   const stored = await chrome.storage.local.get('overrides');
   await chrome.tabs.sendMessage(tabId, {
     type: 'PF_START', candidates: known, recipe, lang: pickLang(s.lang, chrome.i18n.getUILanguage()), overrides: stored.overrides?.[host],
+    shareMode: SHARE_MODES.includes(s.shareMode) ? s.shareMode : 'ask',
   });
   return { ok: true, count: known.length };
 }
@@ -88,12 +103,28 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     chrome.storage.session.get(lastKey(host)).then((r) => sendResponse(freshLast(r[lastKey(host)], host)), () => sendResponse(null));
     return true;
   }
+  // Opt-in sharing of a code that measurably worked: only when the shopper said yes (or chose "always").
+  if (msg?.type === 'PF_SHARE') {
+    (async () => {
+      const s = await settings();
+      if (s.shareMode === 'never') return sendResponse({ ok: false });
+      const r = await fetch(`${s.apiBase.replace(/\/$/, '')}/api/v1/coupons/share`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain: msg.domain, code: msg.code, clientId: await clientIdOf(s) }),
+      }).catch(() => null);
+      sendResponse({ ok: !!r?.ok });
+    })();
+    return true;
+  }
+  if (msg?.type === 'PF_SET_SHARE_MODE') {
+    if (SHARE_MODES.includes(msg.mode)) chrome.storage.local.set({ shareMode: msg.mode });
+    return false;
+  }
   if (msg?.type === 'PF_REPORT') {
     (async () => {
       const s = await settings();
       if (!s.telemetry) return;
-      let clientId = s.clientId;
-      if (!clientId) { clientId = crypto.randomUUID(); await chrome.storage.local.set({ clientId }); }
+      const clientId = await clientIdOf(s);
       await fetch(`${s.apiBase.replace(/\/$/, '')}/api/v1/coupons/report`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ domain: msg.domain, code: msg.code, outcome: msg.outcome, clientId }),

@@ -1,0 +1,15 @@
+{
+  "status": "ok",
+  "data": {
+    "offers": [
+      { "coupon_code": "MYNTRA15", "merchant_url": "https://www.myntra.com/", "title": "Flat 15% off on minimum purchase of Rs. 1,499", "end_date": "2026-12-31", "start_date": "2026-11-10" },
+      { "coupon_code": "myntra15", "merchant_url": "myntra.com", "title": "Flat 15% off on minimum purchase of Rs. 1,499 (repeat)", "end_date": "2027-01-15", "start_date": "2026-11-12" },
+      { "coupon_code": "", "merchant_url": "https://www.myntra.com/", "title": "Up to 70% off on top brands. No code needed", "end_date": "2026-12-31" },
+      { "coupon_code": "OLDSALE", "merchant_url": "https://www.ajio.com/", "title": "Extra 10% off", "end_date": "2026-10-01" },
+      { "coupon_code": "NYKAANEW", "merchant_url": "https://www.nykaa.com/", "title": "Rs. 200 off on your first order above Rs. 999", "end_date": "30/12/2026" },
+      { "coupon_code": "BAD CODE!!", "merchant_url": "https://www.ajio.com/", "title": "x" },
+      { "coupon_code": "AJIO300", "merchant_url": "not a url", "title": "x" },
+      { "coupon_code": "SHOPUS20", "merchant_url": "https://www.example-us-store.com/", "title": "20% off" }
+    ]
+  }
+}

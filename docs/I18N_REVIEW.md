@@ -8,7 +8,7 @@ Please pay particular attention to the strings about money, login, CAPTCHA and r
 
 The app name and description in `_locales/<lang>/messages.json` are also machine-drafted.
 
-55 strings.
+75 strings.
 
 | Key | English | हिन्दी | मराठी | தமிழ் | తెలుగు |
 |---|---|---|---|---|---|
@@ -67,3 +67,23 @@ The app name and description in `_locales/<lang>/messages.json` are also machine
 | `noOffers` | No instant bank offers found on this page. | इस पेज पर कोई तुरंत मिलने वाला बैंक ऑफ़र नहीं मिला। | या पानावर तात्काळ मिळणारी बँक ऑफर सापडली नाही. | இந்தப் பக்கத்தில் உடனடி வங்கிச் சலுகைகள் எதுவும் இல்லை. | ఈ పేజీలో తక్షణ బ్యాంక్ ఆఫర్లు కనబడలేదు. |
 | `payHint` | Next: open the payment page and click Promo-Flow again to see the best bank offer. | अगला कदम: पेमेंट पेज खोलें और सबसे अच्छा बैंक ऑफ़र देखने के लिए Promo-Flow फिर से दबाएँ। | पुढील पायरी: पेमेंट पान उघडा आणि सर्वोत्तम बँक ऑफर पाहण्यासाठी Promo-Flow पुन्हा दाबा. | அடுத்தது: பேமெண்ட் பக்கத்தைத் திறந்து சிறந்த வங்கிச் சலுகையைப் பார்க்க Promo-Flow-ஐ மீண்டும் அழுத்தவும். | తదుపరి: పేమెంట్ పేజీని తెరిచి ఉత్తమ బ్యాంక్ ఆఫర్‌ను చూడటానికి Promo-Flow‌ను మళ్లీ నొక్కండి. |
 | `totalOnPage` | Total on this page | इस पेज पर कुल राशि | या पानावरील एकूण रक्कम | இந்தப் பக்கத்தில் மொத்தத் தொகை | ఈ పేజీలో మొత్తం |
+| `tryMore` | Try {n} more | {n} और आज़माएँ | आणखी {n} वापरून पहा | மேலும் {n} முயற்சி செய் | మరో {n} ప్రయత్నించండి |
+| `tryMoreWait` | Try more in {s}s | {s} सेकंड में और आज़माएँ | {s} सेकंदांत आणखी वापरून पहा | {s} விநாடிகளில் மேலும் முயற்சி | {s} సెకన్లలో మరిన్ని ప్రయత్నించండి |
+| `srcYours` | yours | आपका | तुमचा | உங்களுடையது | మీది |
+| `srcSite` | site | साइट | साइट | தளம் | సైట్ |
+| `srcShared` | shared | साझा | शेअर केलेला | பகிரப்பட்டது | పంచుకున్నది |
+| `srcFeed` | feed | फ़ीड | फीड | ஃபீட் | ఫీడ్ |
+| `srcDataset` | old list | पुरानी सूची | जुनी यादी | பழைய பட்டியல் | పాత జాబితా |
+| `srcKnown` | known | ज्ञात | ज्ञात | அறிந்தது | తెలిసినది |
+| `ageToday` | today | आज | आज | இன்று | ఈరోజు |
+| `ageDays` | {d}d ago | {d} दिन पहले | {d} दिवसांपूर्वी | {d} நாள் முன் | {d} రోజుల క్రితం |
+| `skippedMinSpend` | Skipped, needs a bigger cart: {codes} | छोड़ा गया, बड़ा कार्ट चाहिए: {codes} | वगळले, मोठा कार्ट हवा: {codes} | தவிர்க்கப்பட்டது, பெரிய கார்ட் தேவை: {codes} | వదిలివేయబడింది, పెద్ద కార్ట్ కావాలి: {codes} |
+| `sharePrompt` | {code} worked. Share it with other Promo-Flow users? Only the store and the code are sent. | {code} चल गया। क्या इसे दूसरे Promo-Flow उपयोगकर्ताओं के साथ साझा करें? केवल स्टोर और कोड भेजा जाता है। | {code} चालला. इतर Promo-Flow वापरकर्त्यांसोबत शेअर करायचा? फक्त स्टोअर आणि कोड पाठवला जातो. | {code} வேலை செய்தது. மற்ற Promo-Flow பயனர்களுடன் பகிரவா? கடையும் குறியீடும் மட்டுமே அனுப்பப்படும். | {code} పని చేసింది. ఇతర Promo-Flow వినియోగదారులతో పంచుకోవాలా? స్టోర్ మరియు కోడ్ మాత్రమే పంపబడతాయి. |
+| `shareYes` | Share | साझा करें | शेअर करा | பகிர் | పంచుకోండి |
+| `shareNo` | No | नहीं | नाही | வேண்டாம் | వద్దు |
+| `shareAlways` | Always share | हमेशा साझा करें | नेहमी शेअर करा | எப்போதும் பகிர் | ఎల్లప్పుడూ పంచుకోండి |
+| `sharedThanks` | Shared. Thank you. | साझा किया गया। धन्यवाद। | शेअर केले. धन्यवाद. | பகிரப்பட்டது. நன்றி. | పంచుకోబడింది. ధన్యవాదాలు. |
+| `shareModeL` | Sharing codes that worked for me | मेरे लिए चले कोड साझा करना | माझ्यासाठी चाललेले कोड शेअर करणे | எனக்கு வேலை செய்த குறியீடுகளைப் பகிர்தல் | నాకు పని చేసిన కోడ్‌లను పంచుకోవడం |
+| `shareAsk` | Ask each time | हर बार पूछें | प्रत्येक वेळी विचारा | ஒவ்வொரு முறையும் கேள் | ప్రతిసారి అడగండి |
+| `shareAlwaysOpt` | Always | हमेशा | नेहमी | எப்போதும் | ఎల్లప్పుడూ |
+| `shareNever` | Never | कभी नहीं | कधीच नाही | ஒருபோதும் இல்லை | ఎప్పుడూ వద్దు |

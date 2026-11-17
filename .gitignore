@@ -11,3 +11,6 @@ coverage/
 playwright-report/
 test-results/
 graphify-out/
+backend/data/harvested.json
+backend/data/datasets/*
+!backend/data/datasets/README.md

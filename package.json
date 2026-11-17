@@ -8,7 +8,8 @@
     "build": "node scripts/build.mjs",
     "test": "vitest run",
     "backend": "node backend/server.js",
-    "demo": "node demo/serve.mjs"
+    "demo": "node demo/serve.mjs",
+    "harvest": "node backend/harvest/cli.js"
   },
   "dependencies": {
     "cors": "^2.8.6",

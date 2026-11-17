@@ -16,6 +16,20 @@ const reportSchema = z.object({
   clientId: z.string().regex(/^[A-Za-z0-9-]{8,64}$/),
 });
 
+const shareSchema = z.object({
+  domain: z.string().toLowerCase().regex(DOMAIN_RE),
+  code: z.string().trim().toUpperCase().regex(CODE_RE),
+  clientId: z.string().regex(/^[A-Za-z0-9-]{8,64}$/),
+});
+
+/** Fields the extension needs. Outcome counts stay on the server; descriptions are short. */
+const publicCoupon = (c) => ({
+  code: c.code, score: c.score, source: c.source ?? null, sources: c.sources ?? (c.source ? [c.source] : []),
+  lastSeen: c.lastSeen ?? null, lastSuccessAt: c.lastSuccessAt ?? null, expiresAt: c.expiresAt ?? null,
+  minSpend: c.minSpend ?? null, firstOrderOnly: !!c.firstOrderOnly, description: c.description ?? '',
+  stats: { tries: c.stats?.tries ?? 0, successes: c.stats?.successes ?? 0 },
+});
+
 const normDomain = (d) => String(d || '').toLowerCase().replace(/^www\./, '');
 
 /** recipes: Map<host, validated recipe> (see backend/recipes.js). A recipe stored on the store document wins if it validates. */
@@ -34,14 +48,25 @@ export function createApp({ repo, allowedOrigins = [], recipes = new Map() } = {
 
   app.get('/health', (_req, res) => res.json({ status: 'ok', repo: repo.kind }));
 
+  // ?k=12 (1-30) limits the list; ?exclude=CODE1,CODE2 skips codes the extension already tried.
   app.get('/api/v1/coupons/:domain', limiter(120), async (req, res, next) => {
     try {
       const domain = normDomain(req.params.domain);
       if (!DOMAIN_RE.test(domain)) return res.status(400).json({ error: { code: 'BAD_DOMAIN', message: 'Invalid domain' } });
-      const ranked = rankCoupons(await repo.listCoupons(domain)).map(
-        ({ domain: _d, status: _s, ...c }) => c,
-      );
+      const k = Math.min(30, Math.max(1, Number.parseInt(req.query.k, 10) || 12));
+      const exclude = String(req.query.exclude ?? '').split(',').map((x) => x.trim().toUpperCase()).filter((x) => CODE_RE.test(x)).slice(0, 50);
+      const ranked = rankCoupons(await repo.listCoupons(domain), { now: Date.now(), k, exclude }).map(publicCoupon);
       res.json({ domain, coupons: ranked });
+    } catch (e) { next(e); }
+  });
+
+  // Opt-in: the shopper chose to share a code that measurably lowered their total. Only domain + code + a random client id.
+  app.post('/api/v1/coupons/share', limiter(10), async (req, res, next) => {
+    try {
+      const parsed = shareSchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ error: { code: 'VALIDATION_FAILED', message: 'Invalid share' } });
+      const r = await repo.recordShare({ ...parsed.data, domain: normDomain(parsed.data.domain), now: Date.now() });
+      res.status(202).json(r);
     } catch (e) { next(e); }
   });
 
@@ -52,7 +77,7 @@ export function createApp({ repo, allowedOrigins = [], recipes = new Map() } = {
         return res.status(400).json({ error: { code: 'VALIDATION_FAILED', message: 'Invalid report', details: parsed.error.issues.map((i) => i.path.join('.')) } });
       }
       const day = new Date().toISOString().slice(0, 10);
-      const counted = await repo.recordReport({ ...parsed.data, domain: normDomain(parsed.data.domain), day });
+      const counted = await repo.recordReport({ ...parsed.data, domain: normDomain(parsed.data.domain), day, now: Date.now() });
       res.status(202).json({ counted });
     } catch (e) { next(e); }
   });

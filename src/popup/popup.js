@@ -14,6 +14,8 @@ function render() {
   $('teleL').textContent = t(lang, 'telemetry');
   $('teleHint').textContent = t(lang, 'telemetryHint');
   $('apiL').textContent = t(lang, 'apiBase');
+  $('shareModeL').textContent = t(lang, 'shareModeL');
+  ['shareAsk', 'shareAlwaysOpt', 'shareNever'].forEach((k, i) => { $('shareMode').options[i].textContent = t(lang, k); });
   $('diagTitle').textContent = t(lang, 'diagnoseTitle');
   $('stateL').textContent = t(lang, 'diagnoseState');
   const names = ['stateBag', 'stateCouponPanelOpen', 'stateCouponApplied', 'stateCouponError', 'statePayment'];
@@ -29,16 +31,18 @@ function render() {
 async function init() {
   const sel = $('lang');
   for (const [k, v] of Object.entries(LANGS)) sel.add(new Option(v, k));
-  const s = await chrome.storage.local.get(['lang', 'userCodes', 'telemetry', 'apiBase']);
+  const s = await chrome.storage.local.get(['lang', 'userCodes', 'telemetry', 'apiBase', 'shareMode']);
   lang = pickLang(s.lang, navigator.language);
   sel.value = lang;
   $('codes').value = (s.userCodes || []).join('\n');
   $('tele').checked = !!s.telemetry;
+  $('shareMode').value = ['ask', 'always', 'never'].includes(s.shareMode) ? s.shareMode : 'ask';
   $('api').value = s.apiBase || 'http://localhost:3000';
   render();
 
   sel.addEventListener('change', async () => { lang = sel.value; await chrome.storage.local.set({ lang }); render(); });
   $('tele').addEventListener('change', () => chrome.storage.local.set({ telemetry: $('tele').checked }));
+  $('shareMode').addEventListener('change', () => chrome.storage.local.set({ shareMode: $('shareMode').value }));
   $('save').addEventListener('click', async () => {
     const codes = [...new Set($('codes').value.split(/[\s,]+/).map((c) => c.trim().toUpperCase()).filter((c) => /^[A-Z0-9_-]{3,32}$/.test(c)))].slice(0, 30);
     await chrome.storage.local.set({ userCodes: codes, apiBase: $('api').value.trim() || 'http://localhost:3000' });

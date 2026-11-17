@@ -139,9 +139,13 @@ export function recipeDriver(doc, recipe, { sleep = defaultSleep, pollMs = 100, 
     },
     readMessage: () => (c.message ? locateAll(doc, c.message).map((e) => e.textContent.replace(/\s+/g, ' ').trim()).filter(Boolean).join(' | ') : ''),
     isApplied: () => !!locate(doc, c.applied || c.remove),
+    // Every visible match, not just the shortest: an open coupon panel can show a bare "Coupon applied" message
+    // while the chip that names the code sits elsewhere on the page.
     appliedText() {
-      const el = locate(doc, c.applied) || locate(doc, c.remove)?.parentElement;
-      return el?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+      const all = c.applied ? locateAll(doc, c.applied) : [];
+      const els = all.filter((el) => !all.some((o) => o !== el && el.contains(o))); // innermost matches only, never their ancestors
+      if (!els.length && c.remove) { const r = locate(doc, c.remove)?.parentElement; if (r) els.push(r); }
+      return els.map((el) => el.textContent.replace(/\s+/g, ' ').trim()).filter(Boolean).join(' | ');
     },
     async remove() {
       const ctl = locate(doc, c.remove);

@@ -41,6 +41,17 @@ A site is **supported** only after the live checklist in [docs/LIVE_CHECKLIST.md
 Diagnose capture (M1), recipe format and validation (M2), demo pages (M3), engine with drivers (M4), recipes served from the backend (M5),
 payment-page advice (M7). Still open: **M6** (Myntra, Ajio, Nykaa recipes), which needs the captures described in `tests/fixtures/README.md`.
 
+### Built in v3 (coupons from outside sources)
+
+A backend harvester collects codes from configured sources (an affiliate-network JSON feed, or a local dataset file), cleans and
+de-duplicates them, and ranks every code by **reliability × freshness × fit** (success reports, a 7-day half-life, expiry and
+dead-code rules). The extension fetches the top 30, drops codes whose stated minimum spend is above the cart (the cart total never
+leaves the page), tries at most 6 per run, and offers **Try N more** after a 30-second cooldown. Each tried code shows where it came
+from and how recently it was seen. A code the shopper typed in can be shared with other users only with consent (ask / always / never).
+
+**No source is switched on yet.** Pick one and set `"enabled": true` in `backend/harvest/sources.json` (see
+[docs/V3_COUPON_SOURCING_PLAN.md](docs/V3_COUPON_SOURCING_PLAN.md)). Check each source's terms first.
+
 ## Run it
 
 ```
@@ -48,6 +59,7 @@ npm install
 npm run build        # creates dist/
 npm run backend      # API on :3000 (in-memory data unless MONGODB_URI is set; add --seed to seed Mongo)
 npm run demo         # demo store on http://localhost:4000  (/  and  /modal.html  and  /payment.html)
+npm run harvest      # collect codes from the enabled sources (MongoDB if MONGODB_URI is set, else backend/data/harvested.json)
 npm test
 ```
 Chrome/Edge: chrome://extensions, Developer mode, Load unpacked, pick `dist/`. Open http://localhost:4000/modal.html, click the Promo-Flow icon, press "Find best savings".
@@ -58,6 +70,7 @@ Demo options: `?loggedout=1` shows a login wall, `?captcha=1` shows a CAPTCHA af
 | Doc | What it covers |
 |---|---|
 | [docs/V2_BUILD_BRIEF.md](docs/V2_BUILD_BRIEF.md) | Next version: plan for Myntra, Ajio and Nykaa, and step-by-step build instructions for a coding model |
+| [docs/V3_COUPON_SOURCING_PLAN.md](docs/V3_COUPON_SOURCING_PLAN.md) | V3: collecting fresh codes from outside sources, ranking them, "Try more", opt-in sharing |
 | [docs/LIVE_CHECKLIST.md](docs/LIVE_CHECKLIST.md) | The manual check that decides whether a real site counts as supported |
 | [docs/I18N_REVIEW.md](docs/I18N_REVIEW.md) | Every translated string, for a native-speaker review |
 | [docs/PLAN.md](docs/PLAN.md) | The current plan: product, your answers applied, platforms, data, compliance, roadmap |

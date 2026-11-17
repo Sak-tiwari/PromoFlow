@@ -28,6 +28,13 @@ if (process.env.MONGODB_URI) {
   }
 } else {
   repo = createMemoryRepo(seed);
+  // Codes collected by `npm run harvest` without MongoDB are kept in a file and loaded here.
+  const harvestedFile = path.join(here, 'data/harvested.json');
+  if (fs.existsSync(harvestedFile)) {
+    const list = JSON.parse(fs.readFileSync(harvestedFile, 'utf8'));
+    await repo.upsertHarvested(list);
+    console.log(`Loaded ${list.length} harvested coupons from data/harvested.json`);
+  }
   console.log('MONGODB_URI not set: using the in-memory repository (data resets on restart).');
 }
 

@@ -1,0 +1,33 @@
+# Collects fresh coupon codes every 6 hours into MongoDB.
+# Does nothing until (1) a source is enabled in backend/harvest/sources.json and
+# (2) the repository secret MONGODB_URI is set (Settings -> Secrets and variables -> Actions).
+# Feed API keys go in secrets too (for example FEED_API_KEY), never in the config file.
+name: harvest
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  harvest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      MONGODB_URI: ${{ secrets.MONGODB_URI }}
+      FEED_API_KEY: ${{ secrets.FEED_API_KEY }}
+    steps:
+      - name: Skip when MongoDB is not configured
+        if: env.MONGODB_URI == ''
+        run: echo "MONGODB_URI secret not set; nothing to do."
+      - uses: actions/checkout@v4
+        if: env.MONGODB_URI != ''
+      - uses: actions/setup-node@v4
+        if: env.MONGODB_URI != ''
+        with:
+          node-version: 22
+          cache: npm
+      - if: env.MONGODB_URI != ''
+        run: npm ci --omit=dev
+      - if: env.MONGODB_URI != ''
+        run: npm run harvest
