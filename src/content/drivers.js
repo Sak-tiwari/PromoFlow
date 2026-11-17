@@ -138,8 +138,15 @@ export function recipeDriver(doc, recipe, { sleep = defaultSleep, pollMs = 100, 
     },
     async remove() {
       const ctl = locate(doc, c.remove);
-      if (!ctl) return false;
-      ctl.click();
+      if (ctl) { ctl.click(); return true; }
+      // Sites with no Remove button (Myntra): open the coupon panel, untick the applied coupon, then confirm.
+      if (!c.deselect) return false;
+      if (!(await this.ensureOpen())) return false;
+      const tick = locate(doc, c.deselect);
+      if (!tick) return false;
+      tick.click();
+      const ok = locate(doc, c.confirm);
+      if (ok) ok.click();
       return true;
     },
     // With a recipe, offers are read ONLY from the recipe's offers container (coupon list entries look like offers otherwise).

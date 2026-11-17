@@ -20,3 +20,10 @@ Files: bag, coupon_panel_open, coupon_applied, coupon_error, payment. Product id
 4. Does the total update without a reload?
 5. Logged in or out: the bag capture shows "Login to get upto ₹300 OFF on first order", yet a coupon could be applied. Does coupon use work for a logged-out shopper, and does the wording change when logged in?
 6. MYNTRASAVE appears already ticked in the popup. Is it pre-selected by Myntra?
+
+## Answers from the owner (2026-11-17)
+- The popup closes after a coupon is applied (`panelClosesOnApply: true`).
+- The total updates without a reload.
+- A coupon can be applied without login (no `loginWall` in the recipe).
+- Remove flow (from coupon_edit_checked.html and coupon_edit_unchecked.html): click EDIT, the applied coupon is ticked ("Maximum savings: 300"); unticking it shows "Maximum savings: 0"; the bottom APPLY (#applyCoupon) then confirms. Recipe: `deselect` = `.coupon-base-labelChecked`, `confirm` = `#applyCoupon`.
+- STILL UNCONFIRMED on the live site: that pressing APPLY with nothing ticked really removes the coupon (we only have the screen before pressing it), and whether CHECK applies a typed code on its own. The live check must confirm both.

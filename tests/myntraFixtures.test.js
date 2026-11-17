@@ -4,11 +4,12 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { JSDOM } from 'jsdom';
-import { validateRecipe, pageKind } from '../src/adapters/recipe.js';
+import { validateRecipe, pageKind, locate } from '../src/adapters/recipe.js';
 import { recipeDriver } from '../src/content/drivers.js';
 
 const dir = path.resolve(__dirname, 'fixtures/myntra');
 const draft = JSON.parse(fs.readFileSync(path.join(dir, 'recipe.draft.json'), 'utf8'));
+const shipped = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../backend/data/recipes/myntra.json'), 'utf8'));
 const load = (name) => new JSDOM(fs.readFileSync(path.join(dir, `${name}.html`), 'utf8')).window.document;
 const driver = (name) => recipeDriver(load(name), validateRecipe(draft).recipe, { sleep: async () => {} });
 
@@ -56,7 +57,33 @@ describe('draft Myntra recipe on saved pages', () => {
     expect(offers).toMatch(/YES Credit Card/i);
   });
 
-  it('has NO remove control yet: the applied-coupon flow (EDIT) is not captured', () => {
+  it('has no Remove button: removing means EDIT, untick the applied coupon, press APPLY', () => {
     expect(draft.coupon.remove).toBeUndefined();
+    const checked = driver('coupon_edit_checked');
+    expect(checked.panelOpen()).toBe(true);
+    expect(checked.isApplied()).toBe(true);
+  });
+
+  it('finds the untick target and the confirm button in the EDIT popup, and no target once unticked', () => {
+    const r = validateRecipe(draft).recipe;
+    const checked = load('coupon_edit_checked');
+    expect(locate(checked, r.coupon.deselect)?.textContent).toBe('MYNTRASAVE');
+    expect(locate(checked, r.coupon.confirm)?.textContent).toMatch(/apply/i);
+    expect(locate(load('coupon_edit_unchecked'), r.coupon.deselect)).toBeNull();
+  });
+
+  it('remove() unticks the applied coupon, then presses APPLY', async () => {
+    const doc = load('coupon_edit_checked');
+    const clicks = [];
+    doc.querySelector('.coupon-base-labelChecked').addEventListener('click', () => clicks.push('untick'));
+    doc.querySelector('#applyCoupon').addEventListener('click', () => clicks.push('apply'));
+    const d = recipeDriver(doc, validateRecipe(draft).recipe, { sleep: async () => {} });
+    expect(await d.remove()).toBe(true);
+    expect(clicks).toEqual(['untick', 'apply']);
+  });
+
+  it('the recipe shipped with the extension is the draft (kept in step), and is still unverified', () => {
+    expect(shipped).toEqual(draft);
+    expect(shipped.verified).toBe(false);
   });
 });

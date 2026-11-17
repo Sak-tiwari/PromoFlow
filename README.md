@@ -16,7 +16,7 @@ Automated tests: 107 passing (`npm test`). Real Chromium was used to run the bui
 |---|---|---|---|
 | Demo store, popup flow (`localhost:4000/modal.html`, `payment.html`) | Yes, and in real Chromium | n/a (it is ours) | Listed coupons, popup that closes itself, login wall, CAPTCHA stop, rate-limit stop, payment-page advice |
 | Demo store, simple box (`localhost:4000/`) | Yes, and in real Chromium | n/a | The v1 flow with a collapsed "Have a promo code?" box |
-| Myntra | **No.** Fixtures not captured yet | No | Blocked on M6: needs captures (see `tests/fixtures/README.md`) |
+| Myntra | **Trial only.** Recipe built from real captures, passes tests on the saved pages | No (not tried live) | Needs your live check (`docs/LIVE_CHECKLIST.md`); remove step and typed-code apply unconfirmed |
 | Ajio | **No.** Fixtures not captured yet | No | Same |
 | Nykaa | **No.** Fixtures not captured yet | No | Same |
 | Amazon.in | No | No | Adapter written from memory, experimental, unverified. Amazon's terms forbid automated access: only run by hand, rarely |

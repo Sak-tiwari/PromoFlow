@@ -2,8 +2,9 @@
 // Add one import per recipe file in backend/data/recipes/. Every recipe is validated before use.
 import { validateRecipe } from './recipe.js';
 import demoModal from '../../backend/data/recipes/demo-modal.json';
+import myntra from '../../backend/data/recipes/myntra.json';
 
-const RAW = [demoModal];
+const RAW = [demoModal, myntra];
 
 export const bundledRecipes = RAW.map((r) => validateRecipe(r)).filter((v) => v.ok).map((v) => v.recipe);
 
