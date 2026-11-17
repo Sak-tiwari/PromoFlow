@@ -6,17 +6,23 @@
 <p id="tagline" class="muted"></p>
 <button id="go" class="primary"></button>
 <p id="status" class="muted" role="status"></p>
+<section class="card">
 <label for="codes" id="codesL"></label>
 <textarea id="codes" rows="4" spellcheck="false" autocomplete="off"></textarea>
 <p id="codesHint" class="muted"></p>
+</section>
+<section class="card">
 <label class="chk"><input type="checkbox" id="tele"> <span id="teleL"></span></label>
 <p id="teleHint" class="muted"></p>
 <label for="shareMode" id="shareModeL"></label>
 <select id="shareMode"><option value="ask"></option><option value="always"></option><option value="never"></option></select>
+</section>
+<section class="card">
 <label for="api" id="apiL"></label>
 <input id="api" type="url" spellcheck="false">
 <button id="save"></button>
-<hr>
+</section>
+<section class="card">
 <h2 id="diagTitle"></h2>
 <label for="state" id="stateL"></label>
 <select id="state">
@@ -26,5 +32,6 @@
 <div class="btns"><button id="copy"></button><button id="dl"></button></div>
 <p id="diagNotice" class="muted"></p>
 <p id="diagStatus" class="muted" role="status"></p>
+</section>
 <script src="popup.js"></script>
 </body></html>

@@ -7,7 +7,7 @@ const CSS = `
    Spacing on a 4px grid, one easing curve, motion limited to opacity and transform. */
 :host{all:initial}
 .box{--ease:cubic-bezier(.22,1,.36,1);--fg:rgba(0,0,0,.88);--fg2:rgba(60,60,67,.72);--fg3:rgba(60,60,67,.56);--line:rgba(0,0,0,.08);
- --glass:rgba(255,255,255,.64);--edge:rgba(255,255,255,.72);--ctl:rgba(120,120,128,.12);--ctl-h:rgba(120,120,128,.2);--ac:#0a6cdc;--ok:#1f7a3d;--warn:#8a5a00;
+ --glass:rgba(255,255,255,.58);--edge:rgba(255,255,255,.8);--ctl:rgba(120,120,128,.12);--ctl-h:rgba(120,120,128,.2);--ac:#0a6cdc;--ok:#1f7a3d;--warn:#8a5a00;
  position:fixed;right:16px;top:16px;z-index:2147483647;box-sizing:border-box;width:336px;max-width:calc(100vw - 32px);max-height:calc(100vh - 32px);overflow:auto;
  font:14px/20px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",Roboto,"Noto Sans","Noto Sans Devanagari","Noto Sans Tamil","Noto Sans Telugu",sans-serif;
  color:var(--fg);padding:16px;border-radius:20px;background:var(--glass);border:1px solid var(--edge);
@@ -32,9 +32,6 @@ li .tag{color:var(--fg3);font-size:12px;margin-left:8px}li .fail{color:var(--fg3
 .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .acts button:first-child:not(:only-child),.acts button[data-more]{background:var(--ac);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
 .acts button[data-more]:disabled{background:var(--ctl);color:var(--fg2)}
-@media (prefers-color-scheme:dark){.box{--fg:rgba(255,255,255,.92);--fg2:rgba(235,235,245,.68);--fg3:rgba(235,235,245,.56);--line:rgba(255,255,255,.1);
- --glass:rgba(32,32,36,.68);--edge:rgba(255,255,255,.16);--ctl:rgba(255,255,255,.1);--ctl-h:rgba(255,255,255,.16);--ac:#0a84ff;--ok:#4cc38a;--warn:#e0a030;
- box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 0 0 .5px rgba(0,0,0,.4),0 16px 40px rgba(0,0,0,.4)}}
 @media (prefers-reduced-motion:reduce){.box{animation:none}button{transition:none}}
 `;
 
