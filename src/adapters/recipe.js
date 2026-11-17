@@ -104,7 +104,7 @@ export function validateRecipe(input) {
   if (!c) errors.push('coupon: required');
   else {
     const coupon = {};
-    for (const k of ['open', 'panel', 'input', 'apply', 'close', 'message', 'applied', 'remove', 'deselect', 'confirm']) {
+    for (const k of ['open', 'panel', 'input', 'apply', 'close', 'message', 'applied', 'remove', 'deselect', 'confirm', 'applyConfirm']) {
       const l = locator(c[k], `coupon.${k}`, errors);
       if (l) coupon[k] = l;
     }

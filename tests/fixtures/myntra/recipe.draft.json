@@ -1,6 +1,6 @@
 {
   "id": "myntra",
-  "version": 1,
+  "version": 2,
   "hosts": [
     "www.myntra.com",
     "myntra.com"
@@ -53,6 +53,9 @@
       "css": ".coupon-base-labelChecked"
     },
     "confirm": {
+      "css": "#applyCoupon"
+    },
+    "applyConfirm": {
       "css": "#applyCoupon"
     }
   },

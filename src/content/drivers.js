@@ -128,6 +128,13 @@ export function recipeDriver(doc, recipe, { sleep = defaultSleep, pollMs = 100, 
       const button = locate(doc, c.apply);
       if (button) button.click();
       else if (input) pressEnter(input);
+      // Sites like Myntra only tick the code on CHECK; a second button (APPLY) commits it. Wait briefly for it, then click it.
+      if (c.applyConfirm) {
+        const from = Date.now();
+        let ok = locate(doc, c.applyConfirm);
+        while ((!ok || ok.disabled) && Date.now() - from < 2000) { await sleep(pollMs); ok = locate(doc, c.applyConfirm); }
+        if (ok && !ok.disabled) ok.click();
+      }
     },
     readTotal() {
       const el = locate(doc, recipe.total);
