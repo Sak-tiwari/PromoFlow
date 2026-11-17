@@ -1,12 +1,17 @@
-:root{color-scheme:light dark;--bg:#fff;--fg:#1b1f23;--mut:#57606a;--bd:#d0d7de;--ac:#0b6bcb}
-@media (prefers-color-scheme:dark){:root{--bg:#161b22;--fg:#e6edf3;--mut:#8b949e;--bd:#30363d;--ac:#58a6ff}}
-body{width:340px;margin:0;padding:14px;background:var(--bg);color:var(--fg);font:14px/1.45 system-ui,"Noto Sans","Noto Sans Devanagari","Noto Sans Tamil","Noto Sans Telugu",sans-serif}
-header{display:flex;justify-content:space-between;align-items:center}h1{font-size:17px;margin:0}
-.muted{color:var(--mut);font-size:12px;margin:4px 0 8px}
-button,select,input,textarea{font:inherit;color:inherit;background:transparent;border:1px solid var(--bd);border-radius:8px;padding:6px 8px}
-textarea,input[type=url]{width:100%;box-sizing:border-box}
-.primary{width:100%;background:var(--ac);color:#fff;border-color:var(--ac);padding:9px;font-weight:600;margin-top:6px}
-label{display:block;margin-top:10px;font-weight:600}.chk{font-weight:400;display:flex;gap:6px;align-items:center}
-#save{margin-top:10px}
-
-hr{border:0;border-top:1px solid var(--bd);margin:14px 0 6px}h2{font-size:14px;margin:6px 0}.btns{display:flex;gap:8px;margin-top:8px}
+/* Same glass language as the on-page panel. The popup sits on the browser's own surface, so the tint is a soft gradient-free neutral. */
+:root{color-scheme:light dark;--ease:cubic-bezier(.22,1,.36,1);--bg:#f5f5f7;--card:rgba(255,255,255,.7);--fg:rgba(0,0,0,.88);--mut:rgba(60,60,67,.7);--bd:rgba(0,0,0,.1);--ctl:rgba(120,120,128,.12);--ac:#0a6cdc}
+@media (prefers-color-scheme:dark){:root{--bg:#1c1c1e;--card:rgba(255,255,255,.07);--fg:rgba(255,255,255,.92);--mut:rgba(235,235,245,.62);--bd:rgba(255,255,255,.12);--ctl:rgba(255,255,255,.1);--ac:#0a84ff}}
+body{width:344px;margin:0;padding:16px;background:var(--bg);color:var(--fg);font:14px/20px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",system-ui,"Noto Sans","Noto Sans Devanagari","Noto Sans Tamil","Noto Sans Telugu",sans-serif}
+header{display:flex;justify-content:space-between;align-items:center;min-height:32px}h1{font-size:16px;line-height:20px;font-weight:600;margin:0}
+.muted{color:var(--mut);font-size:12px;line-height:16px;margin:4px 0 12px}
+button,select,input,textarea{font:inherit;color:inherit;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:6px 12px;min-height:32px;box-sizing:border-box;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.3);transition:background-color 150ms var(--ease),border-color 150ms var(--ease),transform 150ms var(--ease)}
+button{cursor:pointer}button:hover{background:var(--ctl)}button:active{transform:scale(.98)}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+textarea,input[type=url]{width:100%}
+.primary{width:100%;background:var(--ac);color:#fff;border-color:transparent;min-height:40px;font-weight:500;margin-top:8px;box-shadow:inset 0 1px 0 rgba(255,255,255,.28)}
+.primary:hover{background:var(--ac);filter:brightness(1.08)}
+label{display:block;margin-top:16px;margin-bottom:4px;font-weight:500}.chk{font-weight:400;display:flex;gap:8px;align-items:center}
+#save{margin-top:12px}
+hr{border:0;border-top:1px solid var(--bd);margin:16px 0 8px}h2{font-size:14px;line-height:20px;font-weight:500;margin:8px 0}.btns{display:flex;gap:8px;margin-top:8px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}

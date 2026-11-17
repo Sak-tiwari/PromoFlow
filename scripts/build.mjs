@@ -15,5 +15,6 @@ await build({ ...common, entryPoints: [path.join(root, 'src/popup/popup.js')], o
 fs.copyFileSync(path.join(root, 'src/popup/popup.html'), path.join(dist, 'popup.html'));
 fs.copyFileSync(path.join(root, 'src/popup/popup.css'), path.join(dist, 'popup.css'));
 fs.copyFileSync(path.join(root, 'manifest.json'), path.join(dist, 'manifest.json'));
+fs.cpSync(path.join(root, 'icons'), path.join(dist, 'icons'), { recursive: true, filter: (s) => !s.endsWith('.svg') });
 fs.cpSync(path.join(root, '_locales'), path.join(dist, '_locales'), { recursive: true });
 console.log('Built extension to dist/');

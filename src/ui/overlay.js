@@ -3,18 +3,39 @@ import { t } from '../i18n/i18n.js';
 import { formatRupees } from '../lib/money.js';
 
 const CSS = `
+/* Glass panel. Direction: calm, exact. One accent (blue) for actions and focus; green only for money saved.
+   Spacing on a 4px grid, one easing curve, motion limited to opacity and transform. */
 :host{all:initial}
-.box{position:fixed;right:16px;top:16px;z-index:2147483647;width:320px;max-width:calc(100vw - 32px);
- font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans","Noto Sans Devanagari","Noto Sans Tamil","Noto Sans Telugu",sans-serif;
- color:#1b1f23;background:#fff;border:1px solid #d0d7de;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.18);padding:14px}
-.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
-h1{font-size:15px;margin:0}
-button{font:inherit;border:1px solid #d0d7de;background:#f6f8fa;border-radius:8px;padding:4px 10px;cursor:pointer}
-.msg{margin:10px 0 0}.big{font-size:20px;font-weight:700;color:#1a7f37}
-.muted{color:#57606a;font-size:12px;margin-top:6px}.msg .muted{margin-top:2px}.warn{color:#9a6700}
-ul{margin:8px 0 0;padding:0;list-style:none;max-height:160px;overflow:auto}li{display:flex;justify-content:space-between;font-size:12px;padding:2px 0;gap:8px}
-li .tag{color:#57606a;font-size:11px;margin-left:6px}.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}button:disabled{opacity:.6;cursor:default}
-@media (prefers-color-scheme:dark){.box{background:#161b22;color:#e6edf3;border-color:#30363d}button{background:#21262d;color:inherit;border-color:#30363d}.muted,li .tag{color:#8b949e}.big{color:#3fb950}}
+.box{--ease:cubic-bezier(.22,1,.36,1);--fg:rgba(0,0,0,.88);--fg2:rgba(60,60,67,.72);--fg3:rgba(60,60,67,.56);--line:rgba(0,0,0,.08);
+ --glass:rgba(255,255,255,.64);--edge:rgba(255,255,255,.72);--ctl:rgba(120,120,128,.12);--ctl-h:rgba(120,120,128,.2);--ac:#0a6cdc;--ok:#1f7a3d;--warn:#8a5a00;
+ position:fixed;right:16px;top:16px;z-index:2147483647;box-sizing:border-box;width:336px;max-width:calc(100vw - 32px);max-height:calc(100vh - 32px);overflow:auto;
+ font:14px/20px -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",Roboto,"Noto Sans","Noto Sans Devanagari","Noto Sans Tamil","Noto Sans Telugu",sans-serif;
+ color:var(--fg);padding:16px;border-radius:20px;background:var(--glass);border:1px solid var(--edge);
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 0 0 .5px var(--line),0 12px 32px rgba(0,0,0,.14),0 2px 6px rgba(0,0,0,.06);
+ -webkit-backdrop-filter:blur(28px) saturate(180%);backdrop-filter:blur(28px) saturate(180%);
+ animation:in 320ms var(--ease) both}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.box{background:rgba(250,250,252,.98)}}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:32px}
+h1{font-size:16px;line-height:20px;font-weight:600;margin:0}
+button{font:inherit;color:var(--fg);border:0;background:var(--ctl);border-radius:10px;min-height:32px;padding:4px 12px;cursor:pointer;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.35);transition:background-color 150ms var(--ease),transform 150ms var(--ease),opacity 150ms var(--ease)}
+button:hover{background:var(--ctl-h)}button:active{transform:scale(.98)}
+button:focus-visible{outline:2px solid var(--ac);outline-offset:2px}button:disabled{opacity:.5;cursor:default;transform:none}
+.msg{margin:12px 0 0}.msg>div+div{margin-top:4px}
+.big{font-size:24px;line-height:28px;font-weight:500;color:var(--ok);font-variant-numeric:tabular-nums;margin:12px 0!important}
+.muted{color:var(--fg2);font-size:12px;line-height:16px;margin-top:8px}.msg .muted{margin-top:2px}.warn{color:var(--warn)}
+ul{margin:12px 0 0;padding:4px 0 0;list-style:none;max-height:160px;overflow:auto;border-top:1px solid var(--line)}
+li{display:flex;justify-content:space-between;align-items:center;min-height:32px;font-size:13px;line-height:20px;gap:8px;font-variant-numeric:tabular-nums}
+li+li{border-top:1px solid var(--line)}
+li .tag{color:var(--fg3);font-size:12px;margin-left:8px}li .fail{color:var(--fg3)}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.acts button:first-child:not(:only-child),.acts button[data-more]{background:var(--ac);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+.acts button[data-more]:disabled{background:var(--ctl);color:var(--fg2)}
+@media (prefers-color-scheme:dark){.box{--fg:rgba(255,255,255,.92);--fg2:rgba(235,235,245,.68);--fg3:rgba(235,235,245,.56);--line:rgba(255,255,255,.1);
+ --glass:rgba(32,32,36,.68);--edge:rgba(255,255,255,.16);--ctl:rgba(255,255,255,.1);--ctl-h:rgba(255,255,255,.16);--ac:#0a84ff;--ok:#4cc38a;--warn:#e0a030;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 0 0 .5px rgba(0,0,0,.4),0 16px 40px rgba(0,0,0,.4)}}
+@media (prefers-reduced-motion:reduce){.box{animation:none}button{transition:none}}
 `;
 
 const DAY = 86_400_000;
@@ -55,7 +76,7 @@ export function createOverlay(doc, lang, { onStop }) {
       const li = doc.createElement('li');
       const a = doc.createElement('span'); a.textContent = outcomeLine(e);
       const tag = doc.createElement('span'); tag.className = 'tag'; tag.textContent = sourceTag(lang, e.origin, e.meta); a.appendChild(tag);
-      const b = doc.createElement('span'); b.textContent = e.outcome === 'applied' ? `−${formatRupees(e.saving)}` : '✕';
+      const b = doc.createElement('span'); b.textContent = e.outcome === 'applied' ? `−${formatRupees(e.saving)}` : '✕'; if (e.outcome !== 'applied') b.className = 'fail';
       li.append(a, b); $('ul').appendChild(li);
     },
     message(text, warn = true) { $('.msg').textContent = text; $('.msg').className = warn ? 'msg warn' : 'msg'; setClose(); },
