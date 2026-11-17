@@ -133,7 +133,9 @@ export function validateRecipe(input) {
     if (!isObj(input.offers)) errors.push('offers: must be an object');
     else {
       const container = locator(input.offers.container, 'offers.container', errors);
-      if (container) r.offers = { container };
+      // Optional: one element per offer, for sites that split an offer over several elements (heading + message).
+      const item = locator(input.offers.item, 'offers.item', errors);
+      if (container) r.offers = { container, ...(item ? { item } : {}) };
     }
   }
 

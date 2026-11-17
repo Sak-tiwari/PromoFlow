@@ -1,0 +1,27 @@
+{
+  "id": "myntra",
+  "version": 1,
+  "hosts": ["www.myntra.com", "myntra.com"],
+  "verified": false,
+  "pages": {
+    "bag": { "pathPrefixes": ["/checkout/cart"] },
+    "payment": { "pathPrefixes": ["/checkout/payment"] }
+  },
+  "coupon": {
+    "open": { "css": ".coupons-base-content button" },
+    "panel": { "css": ".couponsModal-base-modalContainer" },
+    "input": { "css": "#coupon-input-field" },
+    "apply": { "css": ".couponsForm-base-applyButton" },
+    "message": { "css": ".couponsForm-base-errorMessage" },
+    "applied": { "css": ".coupons-base-applied" },
+    "panelClosesOnApply": false,
+    "listed": {
+      "item": { "css": ".coupon-base-validCouponContainer" },
+      "code": { "css": ".coupon-base-labelChecked, .coupon-base-labelUnchecked" },
+      "ineligibleText": ["more to apply"]
+    }
+  },
+  "total": { "css": ".priceDetail-base-total .priceDetail-base-value" },
+  "offers": { "container": { "css": ".bankOffersV2-base-container" }, "item": { "css": ".bankOffersV2-base-offerBody" } },
+  "limits": { "maxAttempts": 6, "delayMs": 1500, "jitterMs": 1000 }
+}

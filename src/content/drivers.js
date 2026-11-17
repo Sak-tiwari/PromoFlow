@@ -146,7 +146,22 @@ export function recipeDriver(doc, recipe, { sleep = defaultSleep, pollMs = 100, 
     readOffers() {
       if (!recipe.offers?.container) return [];
       const box = locate(doc, recipe.offers.container);
-      return box ? readOfferTexts(box) : [];
+      if (!box) return [];
+      if (recipe.offers.item) { // the site splits one offer over several elements: read each offer as a whole, once
+        const seen = new Set();
+        const out = [];
+        for (const el of locateAll(box, recipe.offers.item)) {
+          // Join the text pieces with spaces: "Discount" + "On YES Card" must not become "DiscountOn".
+          const parts = [];
+          const w = doc.createTreeWalker(el, 0x4);
+          while (w.nextNode()) if (w.currentNode.nodeValue.trim()) parts.push(w.currentNode.nodeValue.trim());
+          const t = parts.join(' ').replace(/\s+/g, ' ').trim();
+          if (t && !seen.has(t)) { seen.add(t); out.push(t); }
+          if (out.length >= 20) break;
+        }
+        return out;
+      }
+      return readOfferTexts(box);
     },
     loginRequired: () => !!(recipe.loginWall && locate(doc, recipe.loginWall)),
     captcha: () => looksLikeCaptcha(doc),
