@@ -90,13 +90,20 @@ export function recipeDriver(doc, recipe, { sleep = defaultSleep, pollMs = 100, 
     limits: recipe.limits,
     panelClosesOnApply: !!c.panelClosesOnApply,
     async ensureOpen() {
-      if (reachable()) return true;
+      // Many sites show the input first and load the coupon list a moment later: wait for the list too, so it is not read empty.
+      const settle = async (from) => {
+        if (!c.listed) return;
+        while (!items().length && Date.now() - from < openWaitMs) await sleep(pollMs);
+      };
+      if (reachable()) { await settle(Date.now()); return true; }
       const opener = locate(doc, c.open);
       if (!opener) return false;
       opener.click();
       const start = Date.now();
       while (!reachable() && Date.now() - start < openWaitMs) await sleep(pollMs);
-      return reachable();
+      if (!reachable()) return false;
+      await settle(start);
+      return true;
     },
     panelOpen: () => (c.panel ? !!locate(doc, c.panel) : null),
     listCodes() {

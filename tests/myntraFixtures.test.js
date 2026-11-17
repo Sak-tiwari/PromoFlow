@@ -82,6 +82,17 @@ describe('draft Myntra recipe on saved pages', () => {
     expect(clicks).toEqual(['untick', 'apply']);
   });
 
+  it('waits for a coupon list that loads after the input (real sites load it late)', async () => {
+    const doc = load('coupon_panel_open');
+    const list = doc.querySelectorAll('.coupon-base-validCouponContainer');
+    const holders = [...list].map((el) => ({ el, parent: el.parentElement, next: el.nextSibling }));
+    holders.forEach((h) => h.el.remove()); // the input is there, the list is not yet
+    const d = recipeDriver(doc, validateRecipe(draft).recipe, { pollMs: 20, openWaitMs: 2000 });
+    setTimeout(() => holders.forEach((h) => h.parent.insertBefore(h.el, h.next)), 150);
+    expect(await d.ensureOpen()).toBe(true);
+    expect(d.listCodes().map((x) => x.code)).toContain('MYNTRASAVE');
+  });
+
   it('the recipe shipped with the extension is the draft (kept in step), and is still unverified', () => {
     expect(shipped).toEqual(draft);
     expect(shipped.verified).toBe(false);
