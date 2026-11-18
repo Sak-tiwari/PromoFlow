@@ -1,16 +1,309 @@
 {
   "stores": [
-    { "domain": "localhost", "name": "Demo Store (local test checkout)", "adapter": "generic" },
-    { "domain": "amazon.in", "name": "Amazon India", "adapter": "amazon" },
-    { "domain": "amazon.com", "name": "Amazon", "adapter": "amazon" },
-    { "domain": "flipkart.com", "name": "Flipkart", "adapter": "flipkart" }
+    {
+      "domain": "localhost",
+      "name": "Demo Store (local test checkout)",
+      "adapter": "generic"
+    },
+    {
+      "domain": "amazon.in",
+      "name": "Amazon India",
+      "adapter": "amazon"
+    },
+    {
+      "domain": "amazon.com",
+      "name": "Amazon",
+      "adapter": "amazon"
+    },
+    {
+      "domain": "flipkart.com",
+      "name": "Flipkart",
+      "adapter": "flipkart"
+    },
+    {
+      "domain": "ajio.com",
+      "name": "Ajio",
+      "adapter": "generic"
+    },
+    {
+      "domain": "myntra.com",
+      "name": "Myntra",
+      "adapter": "generic"
+    }
   ],
   "coupons": [
-    { "domain": "localhost", "code": "SAVE10", "type": "percent", "value": 1000, "minSpend": 50000, "source": "demo", "stats": { "tries": 40, "successes": 36 } },
-    { "domain": "localhost", "code": "FLAT100", "type": "flat", "value": 10000, "minSpend": 99900, "source": "demo", "stats": { "tries": 30, "successes": 24 } },
-    { "domain": "localhost", "code": "WELCOME50", "type": "flat", "value": 5000, "minSpend": 0, "source": "demo", "stats": { "tries": 20, "successes": 15 } },
-    { "domain": "localhost", "code": "BIG500", "type": "flat", "value": 50000, "minSpend": 1000000, "source": "demo", "stats": { "tries": 20, "successes": 2 } },
-    { "domain": "localhost", "code": "OLD20", "type": "percent", "value": 2000, "source": "demo", "stats": { "tries": 25, "successes": 0 } },
-    { "domain": "localhost", "code": "NOPE", "type": "unknown", "value": 0, "source": "demo", "stats": { "tries": 10, "successes": 0 } }
+    {
+      "domain": "localhost",
+      "code": "SAVE10",
+      "type": "percent",
+      "value": 1000,
+      "minSpend": 50000,
+      "source": "demo",
+      "stats": {
+        "tries": 40,
+        "successes": 36
+      }
+    },
+    {
+      "domain": "localhost",
+      "code": "FLAT100",
+      "type": "flat",
+      "value": 10000,
+      "minSpend": 99900,
+      "source": "demo",
+      "stats": {
+        "tries": 30,
+        "successes": 24
+      }
+    },
+    {
+      "domain": "localhost",
+      "code": "WELCOME50",
+      "type": "flat",
+      "value": 5000,
+      "minSpend": 0,
+      "source": "demo",
+      "stats": {
+        "tries": 20,
+        "successes": 15
+      }
+    },
+    {
+      "domain": "localhost",
+      "code": "BIG500",
+      "type": "flat",
+      "value": 50000,
+      "minSpend": 1000000,
+      "source": "demo",
+      "stats": {
+        "tries": 20,
+        "successes": 2
+      }
+    },
+    {
+      "domain": "localhost",
+      "code": "OLD20",
+      "type": "percent",
+      "value": 2000,
+      "source": "demo",
+      "stats": {
+        "tries": 25,
+        "successes": 0
+      }
+    },
+    {
+      "domain": "localhost",
+      "code": "NOPE",
+      "type": "unknown",
+      "value": 0,
+      "source": "demo",
+      "stats": {
+        "tries": 10,
+        "successes": 0
+      }
+    },
+    {
+      "domain": "ajio.com",
+      "code": "NEW30",
+      "source": "zoutons.com (third-party, unverified)",
+      "firstOrderOnly": true
+    },
+    {
+      "domain": "ajio.com",
+      "code": "NEW10",
+      "source": "zoutons.com (third-party, unverified)",
+      "firstOrderOnly": true
+    },
+    {
+      "domain": "ajio.com",
+      "code": "NEW500",
+      "source": "zoutons.com (third-party, unverified)",
+      "firstOrderOnly": true
+    },
+    {
+      "domain": "ajio.com",
+      "code": "NEW300",
+      "source": "zoutons.com (third-party, unverified)",
+      "firstOrderOnly": true
+    },
+    {
+      "domain": "ajio.com",
+      "code": "NEW25",
+      "source": "zoutons.com (third-party, unverified)",
+      "firstOrderOnly": true
+    },
+    {
+      "domain": "ajio.com",
+      "code": "FIRSTBUY",
+      "source": "zoutons.com (third-party, unverified)",
+      "firstOrderOnly": true
+    },
+    {
+      "domain": "ajio.com",
+      "code": "FIRSTAPP",
+      "source": "zoutons.com (third-party, unverified)",
+      "firstOrderOnly": true
+    },
+    {
+      "domain": "ajio.com",
+      "code": "SALE5",
+      "source": "zoutons.com (third-party, unverified)",
+      "minSpend": 99000
+    },
+    {
+      "domain": "ajio.com",
+      "code": "SALE10",
+      "source": "zoutons.com (third-party, unverified)",
+      "minSpend": 219000
+    },
+    {
+      "domain": "ajio.com",
+      "code": "SALE350",
+      "source": "zoutons.com (third-party, unverified)",
+      "minSpend": 249000
+    },
+    {
+      "domain": "ajio.com",
+      "code": "SAVE5",
+      "source": "zoutons.com (third-party, unverified)",
+      "minSpend": 149000
+    },
+    {
+      "domain": "ajio.com",
+      "code": "WISH",
+      "source": "zoutons.com (third-party, unverified)",
+      "minSpend": 199900
+    },
+    {
+      "domain": "ajio.com",
+      "code": "GLOWUP",
+      "source": "zoutons.com (third-party, unverified)"
+    },
+    {
+      "domain": "ajio.com",
+      "code": "AJIOGRAM20",
+      "source": "zoutons.com (third-party, unverified)"
+    },
+    {
+      "domain": "ajio.com",
+      "code": "SWEETHOME",
+      "source": "zoutons.com (third-party, unverified)"
+    },
+    {
+      "domain": "ajio.com",
+      "code": "FREEDEL",
+      "source": "zoutons.com (third-party, unverified)",
+      "minSpend": 79900
+    },
+    {
+      "domain": "ajio.com",
+      "code": "FASHIONATION10",
+      "source": "gopaisa.com (third-party, unverified)",
+      "minSpend": 199000
+    },
+    {
+      "domain": "ajio.com",
+      "code": "FASHIONATION15",
+      "source": "gopaisa.com (third-party, unverified)",
+      "minSpend": 299000
+    },
+    {
+      "domain": "ajio.com",
+      "code": "AJIOMANIA500",
+      "source": "gopaisa.com (third-party, unverified)",
+      "minSpend": 449000
+    },
+    {
+      "domain": "ajio.com",
+      "code": "AJIOMANIA800",
+      "source": "gopaisa.com (third-party, unverified)",
+      "minSpend": 559000
+    },
+    {
+      "domain": "ajio.com",
+      "code": "FLASHSALE",
+      "source": "gopaisa.com (third-party, unverified)",
+      "minSpend": 289000
+    },
+    {
+      "domain": "ajio.com",
+      "code": "WINTERSPL",
+      "source": "gopaisa.com (third-party, unverified)",
+      "minSpend": 249000
+    },
+    {
+      "domain": "myntra.com",
+      "code": "MYNTRA100",
+      "source": "gopaisa.com (third-party, unverified)",
+      "minSpend": 49900,
+      "firstOrderOnly": true
+    },
+    {
+      "domain": "myntra.com",
+      "code": "MYNTRA200",
+      "source": "gopaisa.com (third-party, unverified)",
+      "minSpend": 89900,
+      "firstOrderOnly": true
+    },
+    {
+      "domain": "myntra.com",
+      "code": "MYNTRA300",
+      "source": "gopaisa.com (third-party, unverified)",
+      "minSpend": 169900,
+      "firstOrderOnly": true
+    },
+    {
+      "domain": "myntra.com",
+      "code": "MYNTRA400",
+      "source": "gopaisa.com (third-party, unverified)",
+      "minSpend": 209900,
+      "firstOrderOnly": true
+    },
+    {
+      "domain": "myntra.com",
+      "code": "MYNTRA500",
+      "source": "gopaisa.com (third-party, unverified)",
+      "minSpend": 299900,
+      "firstOrderOnly": true
+    },
+    {
+      "domain": "myntra.com",
+      "code": "MYNTRASAVE",
+      "source": "gopaisa.com (third-party, unverified)",
+      "minSpend": 49900
+    },
+    {
+      "domain": "myntra.com",
+      "code": "NORETURNX",
+      "source": "gopaisa.com (third-party, unverified)",
+      "minSpend": 39900
+    },
+    {
+      "domain": "myntra.com",
+      "code": "EXTRA50",
+      "source": "gopaisa.com (third-party, unverified)",
+      "minSpend": 40000
+    },
+    {
+      "domain": "myntra.com",
+      "code": "SPORTS20OFF",
+      "source": "gopaisa.com (third-party, unverified)"
+    },
+    {
+      "domain": "myntra.com",
+      "code": "MFCGET",
+      "source": "gopaisa.com (third-party, unverified)"
+    },
+    {
+      "domain": "myntra.com",
+      "code": "MFC10",
+      "source": "gopaisa.com (third-party, unverified)"
+    },
+    {
+      "domain": "myntra.com",
+      "code": "FESTIVE10",
+      "source": "gopaisa.com (third-party, unverified)",
+      "minSpend": 130000
+    }
   ]
 }
