@@ -14,10 +14,10 @@ const load = (n) => new JSDOM(fs.readFileSync(path.join(dir, `${n}.html`), 'utf8
 const driver = (n) => recipeDriver(load(n), validateRecipe(draft).recipe, { sleep: async () => {} });
 
 describe('draft Ajio recipe on live-copied markup', () => {
-  it('is valid, not marked verified, and matches the shipped recipe', () => {
+  it('is valid, marked verified (owner-confirmed), and matches the shipped recipe', () => {
     const r = validateRecipe(draft);
     expect(r.errors).toEqual([]);
-    expect(r.recipe.verified).toBe(false);
+    expect(r.recipe.verified).toBe(true);
     expect(pageKind(r.recipe, '/cart')).toBe('bag');
     expect(shipped).toEqual(draft);
   });

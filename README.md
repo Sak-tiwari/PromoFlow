@@ -6,9 +6,9 @@ A small Node.js/Express + MongoDB backend stores coupon candidates and anonymous
 
 College project. Zero-cost to run. Designed so more sites are added by configuration.
 
-## Status (16 Nov 2026): v2 built, real sites not yet verified
+## Status (18 Nov 2026): Myntra and Ajio working
 
-Automated tests: 107 passing (`npm test`). Real Chromium was used to run the built extension on the local demo pages.
+Automated tests: 157 passing (`npm test`). Real Chromium was used to run the built extension on the local demo pages. **Myntra and Ajio are working** (owner-confirmed on the live sites); the other sites are still unverified.
 
 ### Site support (honest table)
 
@@ -16,9 +16,8 @@ Automated tests: 107 passing (`npm test`). Real Chromium was used to run the bui
 |---|---|---|---|
 | Demo store, popup flow (`localhost:4000/modal.html`, `payment.html`) | Yes, and in real Chromium | n/a (it is ours) | Listed coupons, popup that closes itself, login wall, CAPTCHA stop, rate-limit stop, payment-page advice |
 | Demo store, simple box (`localhost:4000/`) | Yes, and in real Chromium | n/a | The v1 flow with a collapsed "Have a promo code?" box |
-| Myntra | **Trial only.** Recipe built from real captures, passes tests on the saved pages | No (not tried live) | Needs your live check (`docs/LIVE_CHECKLIST.md`); remove step and typed-code apply unconfirmed |
-| Ajio | **Trial only.** Recipe from the live bag page; listed coupon NEW30 ticked + Apply gave ₹319.00 → ₹199.80 by hand in the real page | No (full extension run not done) | Only coupons Ajio lists are tried (its typed box is hidden); `/payment` path guessed |
-| Ajio | **No.** Fixtures not captured yet | No | Same |
+| Myntra | **Working.** Recipe from real captures, passes the saved-page tests, and confirmed on the live site | Yes (owner, 17 Nov 2026) | Coupons are picked from the site's own list, then CHECK and APPLY are pressed; removal untick-and-confirm. 12 third-party codes are also bundled |
+| Ajio | **Working.** Recipe from the live bag page: a listed coupon is ticked, then Apply (NEW30 took ₹319.00 to ₹199.80 by hand), and the extension run was confirmed by the owner | Yes (owner, 18 Nov 2026) | Typed codes need the site's visible box (it is hidden when the site lists coupons). 22 third-party codes are bundled. The `/payment` path is still a guess |
 | Nykaa | **No.** Fixtures not captured yet | No | Same |
 | Amazon.in | No | No | Adapter written from memory, experimental, unverified. Amazon's terms forbid automated access: only run by hand, rarely |
 | Flipkart | No | No | No site-specific rules. Flipkart mostly uses offers you select rather than codes you type, so this approach may barely apply |
@@ -40,7 +39,7 @@ A site is **supported** only after the live checklist in [docs/LIVE_CHECKLIST.md
 ### Built in v2
 
 Diagnose capture (M1), recipe format and validation (M2), demo pages (M3), engine with drivers (M4), recipes served from the backend (M5),
-payment-page advice (M7). Still open: **M6** (Myntra, Ajio, Nykaa recipes), which needs the captures described in `tests/fixtures/README.md`.
+payment-page advice (M7). M6 is done for Myntra and Ajio; **Nykaa** still needs the captures described in `tests/fixtures/README.md`.
 
 ### Built in v3 (coupons from outside sources)
 
@@ -50,8 +49,10 @@ dead-code rules). The extension fetches the top 30, drops codes whose stated min
 leaves the page), tries at most 6 per run, and offers **Try N more** after a 30-second cooldown. Each tried code shows where it came
 from and how recently it was seen. A code the shopper typed in can be shared with other users only with consent (ask / always / never).
 
-**No source is switched on yet.** Pick one and set `"enabled": true` in `backend/harvest/sources.json` (see
+**No outside source is switched on yet** (34 Ajio and Myntra codes from public coupon pages were added by hand to `backend/data/seed.json`, tagged third-party and unverified). Pick one and set `"enabled": true` in `backend/harvest/sources.json` (see
 [docs/V3_COUPON_SOURCING_PLAN.md](docs/V3_COUPON_SOURCING_PLAN.md)). Check each source's terms first.
+
+**Planned: coupon web scraper.** A new `scrape` source for the harvester that collects public coupon codes automatically on a schedule, instead of copying them by hand. Design only, not built: see [docs/SCRAPER_PLAN.md](docs/SCRAPER_PLAN.md).
 
 ## Run it
 
@@ -72,6 +73,7 @@ Demo options: `?loggedout=1` shows a login wall, `?captcha=1` shows a CAPTCHA af
 |---|---|
 | [docs/V2_BUILD_BRIEF.md](docs/V2_BUILD_BRIEF.md) | Next version: plan for Myntra, Ajio and Nykaa, and step-by-step build instructions for a coding model |
 | [docs/V3_COUPON_SOURCING_PLAN.md](docs/V3_COUPON_SOURCING_PLAN.md) | V3: collecting fresh codes from outside sources, ranking them, "Try more", opt-in sharing |
+| [docs/SCRAPER_PLAN.md](docs/SCRAPER_PLAN.md) | The planned coupon web scraper: where it fits, how it would work, its rules and risks, build steps |
 | [docs/LIVE_CHECKLIST.md](docs/LIVE_CHECKLIST.md) | The manual check that decides whether a real site counts as supported |
 | [docs/I18N_REVIEW.md](docs/I18N_REVIEW.md) | Every translated string, for a native-speaker review |
 | [docs/PLAN.md](docs/PLAN.md) | The current plan: product, your answers applied, platforms, data, compliance, roadmap |

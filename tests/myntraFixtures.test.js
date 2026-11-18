@@ -14,10 +14,10 @@ const load = (name) => new JSDOM(fs.readFileSync(path.join(dir, `${name}.html`),
 const driver = (name) => recipeDriver(load(name), validateRecipe(draft).recipe, { sleep: async () => {} });
 
 describe('draft Myntra recipe on saved pages', () => {
-  it('is a valid recipe, not marked verified', () => {
+  it('is a valid recipe, marked verified (owner-confirmed)', () => {
     const r = validateRecipe(draft);
     expect(r.errors).toEqual([]);
-    expect(r.recipe.verified).toBe(false);
+    expect(r.recipe.verified).toBe(true);
     expect(pageKind(r.recipe, '/checkout/cart')).toBe('bag');
     expect(pageKind(r.recipe, '/checkout/payment')).toBe('payment');
   });
@@ -93,8 +93,8 @@ describe('draft Myntra recipe on saved pages', () => {
     expect(d.listCodes().map((x) => x.code)).toContain('MYNTRASAVE');
   });
 
-  it('the recipe shipped with the extension is the draft (kept in step), and is still unverified', () => {
+  it('the recipe shipped with the extension is the draft (kept in step), and is marked verified', () => {
     expect(shipped).toEqual(draft);
-    expect(shipped.verified).toBe(false);
+    expect(shipped.verified).toBe(true);
   });
 });

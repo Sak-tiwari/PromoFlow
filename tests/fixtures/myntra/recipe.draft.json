@@ -5,7 +5,7 @@
     "www.myntra.com",
     "myntra.com"
   ],
-  "verified": false,
+  "verified": true,
   "pages": {
     "bag": {
       "pathPrefixes": [
