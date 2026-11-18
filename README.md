@@ -54,7 +54,35 @@ from and how recently it was seen. A code the shopper typed in can be shared wit
 
 **Planned: coupon web scraper.** A new `scrape` source for the harvester that collects public coupon codes automatically on a schedule, instead of copying them by hand. Design only, not built: see [docs/SCRAPER_PLAN.md](docs/SCRAPER_PLAN.md).
 
-## Run it
+## Tech stack
+
+| Part | Technology |
+|---|---|
+| Extension | Chrome/Edge Manifest V3, plain JavaScript (ES modules), service worker + content script + popup, bundled with esbuild |
+| Algorithms | Own implementations: Trie, max-heap, min-heap TTL cache, grouped-knapsack dynamic programming, Wilson lower bound |
+| Backend | Node.js, Express 5, zod validation, helmet, CORS and rate limiting |
+| Database | MongoDB (optional; an in-memory store is used when `MONGODB_URI` is not set) |
+| Tests | vitest, jsdom, supertest, Playwright (real Chromium checks) |
+| Languages | English, Hindi, Marathi, Tamil, Telugu (machine-drafted, see docs/I18N_REVIEW.md) |
+
+## Quick start (step by step)
+
+Needs Node.js 20 or newer and Chrome or Edge.
+
+1. `git clone https://github.com/Sak-tiwari/PromoFlow.git && cd PromoFlow`
+2. `npm install`
+3. `cp .env.example .env` (optional: every value is optional, the backend runs in memory without them)
+4. `npm run build` creates `dist/`
+5. `npm run backend` starts the API on http://localhost:3000, and `npm run demo` starts the demo store on http://localhost:4000 (use two terminals)
+6. In Chrome or Edge open `chrome://extensions`, turn on Developer mode, click **Load unpacked**, and pick the `dist/` folder
+7. Open http://localhost:4000/modal.html (add something to the bag if asked), click the Promo-Flow icon, and press **Find best savings**
+8. `npm test` runs the 157 automated tests
+
+**Demo credentials:** none needed. The app has no user accounts or login. The demo store's "login wall" test page (`?loggedout=1`) is a simulated screen, not a real sign-in.
+
+**Real shops:** open a Myntra or Ajio bag page with an item in it and click the icon. Do not pay while testing.
+
+## Run it (commands)
 
 ```
 npm install
