@@ -4,6 +4,8 @@ A browser extension (Chrome/Edge, Manifest V3) for Indian shoppers. At checkout 
 reads the site's bank/payment offers, and picks the best allowed combination: **at most one coupon plus one payment offer**.
 A small Node.js/Express + MongoDB backend stores coupon candidates and anonymous success statistics.
 
+**Live page and download:** https://promo-flow-rust.vercel.app (install steps and the extension zip). The zip is also in [`releases/`](releases/).
+
 College project. Zero-cost to run. Designed so more sites are added by configuration.
 
 ## Status (18 Nov 2026): Myntra and Ajio working
