@@ -3,8 +3,9 @@
 import { validateRecipe } from './recipe.js';
 import demoModal from '../../backend/data/recipes/demo-modal.json';
 import myntra from '../../backend/data/recipes/myntra.json';
+import ajio from '../../backend/data/recipes/ajio.json';
 
-const RAW = [demoModal, myntra];
+const RAW = [demoModal, myntra, ajio];
 
 export const bundledRecipes = RAW.map((r) => validateRecipe(r)).filter((v) => v.ok).map((v) => v.recipe);
 

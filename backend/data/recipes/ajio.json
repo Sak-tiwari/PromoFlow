@@ -1,0 +1,58 @@
+{
+ "id": "ajio",
+ "version": 1,
+ "hosts": [
+  "www.ajio.com",
+  "ajio.com"
+ ],
+ "verified": false,
+ "pages": {
+  "bag": {
+   "pathPrefixes": [
+    "/cart"
+   ]
+  },
+  "payment": {
+   "pathPrefixes": [
+    "/payment"
+   ]
+  }
+ },
+ "coupon": {
+  "input": {
+   "css": "#couponCodeInput"
+  },
+  "apply": {
+   "css": ".input-box-div .apply-button"
+  },
+  "message": {
+   "css": ".voucher-error"
+  },
+  "applied": {
+   "css": ".applied-voucher .voucher-label"
+  },
+  "remove": {
+   "css": ".ic-delete[aria-label^=\"Remove coupon\"]"
+  },
+  "listed": {
+   "item": {
+    "css": ".voucher-list-item"
+   },
+   "code": {
+    "css": ".voucher-code"
+   },
+   "select": {
+    "css": "input.offer-radio"
+   },
+   "ineligibleText": []
+  }
+ },
+ "total": {
+  "css": "#orderTotal .price-value"
+ },
+ "limits": {
+  "maxAttempts": 6,
+  "delayMs": 1500,
+  "jitterMs": 1000
+ }
+}
