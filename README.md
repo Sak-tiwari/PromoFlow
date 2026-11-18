@@ -69,16 +69,28 @@ from and how recently it was seen. A code the shopper typed in can be shared wit
 
 ## Quick start (step by step)
 
-Needs Node.js 20 or newer and Chrome or Edge.
+Needs Node.js 20 or newer (22 recommended) and Chrome or Edge.
+
+**Option A: no build needed.** Download [promo-flow-extension-v0.1.0.zip](https://github.com/Sak-tiwari/PromoFlow/raw/main/releases/promo-flow-extension-v0.1.0.zip) (also in [`releases/`](releases/)), unzip it, and go to step 6 below, choosing the unzipped folder.
+
+**Option B: build it from the source.**
 
 1. `git clone https://github.com/Sak-tiwari/PromoFlow.git && cd PromoFlow`
 2. `npm install`
 3. `cp .env.example .env` (optional: every value is optional, the backend runs in memory without them)
-4. `npm run build` creates `dist/`
-5. `npm run backend` starts the API on http://localhost:3000, and `npm run demo` starts the demo store on http://localhost:4000 (use two terminals)
-6. In Chrome or Edge open `chrome://extensions`, turn on Developer mode, click **Load unpacked**, and pick the `dist/` folder
-7. Open http://localhost:4000/modal.html (add something to the bag if asked), click the Promo-Flow icon, and press **Find best savings**
+4. **`npm run build`**: this creates the `dist/` folder, which is the extension Chrome loads (see "About `npm run build`" below)
+5. In two terminals: `npm run backend` (API on http://localhost:3000) and `npm run demo` (demo store on http://localhost:4000)
+6. In Chrome or Edge open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and pick the `dist/` folder (or the unzipped folder from Option A)
+7. Open http://localhost:4000/modal.html, click the Promo-Flow icon, and press **Find best savings**
 8. `npm test` runs the 157 automated tests
+
+### About `npm run build`
+
+- The extension's source is in `src/`, written as many small ES modules. Chrome cannot load that directly, so `npm run build` (esbuild, via `scripts/build.mjs`) bundles it into a few files in **`dist/`**: `background.js`, `content.js`, the popup, `manifest.json`, icons and translations.
+- **`dist/` is not stored in the repo** (it is in `.gitignore`), so after cloning you must run `npm run build` once, and again after any change in `src/`, `backend/data/` (coupon seed and recipes) or `manifest.json`.
+- After rebuilding, open `chrome://extensions` and click the reload arrow on Promo-Flow, then reload the shop tab.
+- Chrome says "Manifest file is missing or unreadable"? You picked the project folder instead of `dist/`, or you have not built yet.
+- The backend and demo store are not needed for Myntra and Ajio: the extension has the recipes and a starter set of codes built in, and falls back to them when the backend is off.
 
 **Demo credentials:** none needed. The app has no user accounts or login. The demo store's "login wall" test page (`?loggedout=1`) is a simulated screen, not a real sign-in.
 
